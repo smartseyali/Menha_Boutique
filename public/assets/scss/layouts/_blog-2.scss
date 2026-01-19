@@ -1,0 +1,53 @@
+/* blog-2 */
+.blog-2-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-30;
+
+    &:hover {
+        .blog-contact {
+            background-color: rgba(255, 255, 255, 1);
+        }
+
+        .blog-img {
+            img {
+                transform: scale(1.1) rotate(3deg);
+            }
+        }
+    }
+
+    .blog-img {
+        img {
+            @include ease3;
+            width: 100%;
+        }
+    }
+
+    .blog-contact {
+        @include ease3;
+        margin: 5px;
+        padding: 15px;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        background-color: rgba(255, 255, 255, .9);
+        border-radius: $radius-30;
+
+        span {
+            font-size: 13px;
+            color: $text-color;
+        }
+
+        h4 {
+            font-size: 16px;
+
+            a {
+                font-size: 16px;
+                font-weight: 500;
+                line-height: 1.3;
+                color: $title-color;
+            }
+        }
+    }
+}

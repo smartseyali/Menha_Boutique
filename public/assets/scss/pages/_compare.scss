@@ -1,0 +1,113 @@
+/* compare */
+.bb-compare {
+    @include scrollbar;
+    overflow: auto;
+
+    ul.bb-compare-main-box {
+        display: flex;
+
+        li.bb-compare-inner-rows {
+            &:last-child {
+                border-right: 1px solid $border-eee;
+            }
+        }
+
+        ul.bb-compare-inner-box {
+            border-left: 1px solid $border-eee;
+            border-top: 1px solid $border-eee;
+            border-bottom: 1px solid $border-eee;
+            width: 323px;
+
+            li {
+                &:not(:last-child) {
+                    border-bottom: 1px solid $border-eee;
+                }
+            }
+
+            .inner-image {
+                position: relative;
+                background-color: $bg-fff;
+
+                .bb-remove-compare {
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+
+                    i {
+                        @include ease3;
+                        font-size: 22px;
+                        color: $text-color;
+
+                        &:hover {
+                            color: $primary;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.compare-pro-img {
+    height: 250px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    p {
+        font-size: 15px;
+    }
+
+    img {
+        height: 100%;
+    }
+}
+
+.compare-description {
+    height: 112px;
+}
+
+.compare-pro-title,
+.compare-pro-detail {
+    padding: 20px;
+
+    h5 {
+        font-size: 16px;
+        line-height: 24px;
+        font-weight: 700;
+        color: $title-color;
+    }
+
+    p {
+        font-size: 15px;
+        line-height: 24px;
+        font-weight: 400;
+        color: $text-color;
+    }
+
+    .in-stock {
+        color: $primary !important;
+    }
+
+    .out-stock {
+        color: $off-pink !important;
+    }
+}
+
+/* Responsive */
+@media screen and (max-width: 991px) {
+    .bb-compare {
+        ul.bb-compare-main-box {
+            ul.bb-compare-inner-box {
+                width: 250px;
+            }
+        }
+    }
+
+    .compare-pro-img {
+        img {
+            width: 100%;
+        }
+    }
+}

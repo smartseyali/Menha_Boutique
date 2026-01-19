@@ -1,0 +1,114 @@
+.user-section {
+    padding: 0 25px;
+    background-image: url("/assets/img/vendors/15.jpg");
+    height: 300px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+    background-color: rgba(0, 0, 0, 0.7);
+    position: relative;
+
+}
+
+.user-detail {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+
+    .v-detail {
+        max-width: 500px;
+        margin: 10px 30px;
+
+        p {
+            color: #fff !important;
+            margin-top: 15px;
+        }
+
+        h5 {
+            color: #fff !important;
+        }
+    }
+}
+
+.margin-buttom {
+    margin-bottom: 30px;
+}
+
+.detail {
+    img {
+        width: 150px;
+        height: 150px;
+        border-radius: 5px 5px 0 0;
+    }
+}
+
+.p-30 {
+    padding: 30px;
+}
+
+.bb-vender-about-block {
+    h5 {
+        margin-bottom: 15px;
+        text-transform: capitalize;
+        font-weight: 700;
+        color: #4b5966;
+    }
+
+    p {
+        color: #777;
+        margin-bottom: 1rem;
+    }
+}
+
+.bb-vendor-detail-block {
+    h6 {
+        margin-bottom: 15px;
+        padding: 15px 15px 15px 0;
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        color: #4b5966;
+        border-bottom: 1px solid #eee;
+    }
+
+}
+
+.bb-sidebar-wrap:last-child {
+    margin-bottom: 0;
+}
+
+.bb-sticky-sidebar {
+    position: sticky !important;
+    top: 30px;
+}
+
+.bb-vendor-block-items {
+    padding: 0 15px;
+
+    ul li:not(:last-child) {
+        border-bottom: 1px solid #eee;
+    }
+
+    ul li {
+        transition: all 0.3s ease-in-out;
+        padding: 13px 0 10px 0;
+    }
+}
+
+@media (max-width: 575px) {
+    .user-section {
+        height: 400px;
+    }
+
+    .user-detail {
+        margin: 15px;
+        left: 0;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .v-detail {
+        margin: 30px 0 0 0 !important;
+    }
+}

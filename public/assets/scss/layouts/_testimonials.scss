@@ -1,0 +1,318 @@
+/* Testimonials */
+.bb-testimonials {
+    position: relative;
+
+    .inner-banner {
+        transform: rotate(270deg);
+        position: absolute;
+        top: 138px;
+        z-index: -1;
+        left: -20px;
+        bottom: 0;
+
+        h4 {
+            text-shadow: $text-border-shape;
+            color: $text-fff;
+            opacity: 0.15;
+            font-size: 42px;
+            font-weight: 700;
+        }
+    }
+
+    .testimonials-img-1 {
+        z-index: -1;
+        height: 70px;
+        width: 70px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 20px;
+        transform: rotate(-10deg);
+    }
+
+    .testimonials-img-2 {
+        z-index: -1;
+        position: absolute;
+        height: 50px;
+        width: 50px;
+        top: 240px;
+        left: 0;
+        border-radius: 15px;
+        transform: rotate(15deg);
+        filter: blur(3px);
+    }
+
+    .testimonials-img-3 {
+        z-index: -1;
+        position: absolute;
+        height: 60px;
+        width: 60px;
+        top: -50px;
+        right: 500px;
+        border-radius: 20px;
+        transform: rotate(-30deg);
+        filter: blur(3px);
+    }
+
+    .testimonials-img-4 {
+        z-index: -1;
+        position: absolute;
+        height: 60px;
+        width: 60px;
+        top: 50px;
+        right: 250px;
+        border-radius: 20px;
+        transform: rotate(15deg);
+    }
+
+    .testimonials-img-5 {
+        z-index: -1;
+        position: absolute;
+        height: 70px;
+        width: 70px;
+        top: 0;
+        right: 20px;
+        border-radius: 20px;
+        filter: blur(3px);
+    }
+
+    .testimonials-img-6 {
+        z-index: -1;
+        position: absolute;
+        height: 60px;
+        width: 60px;
+        top: 193px;
+        right: 35px;
+        border-radius: 20px;
+        transform: rotate(-25deg);
+    }
+
+    .bb-testimonials-inner {
+        max-width: 900px;
+        margin-left: 170px;
+
+        .testimonials-image {
+            position: relative;
+
+            img {
+                width: 100%;
+                border-radius: $radius-30;
+            }
+        }
+
+        .testimonials-contact {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+
+            img {
+                border-radius: $radius-15;
+                display: none;
+            }
+
+            h4 {
+                margin-bottom: 8px;
+                font-size: 20px;
+                font-weight: 700;
+            }
+
+            span {
+                font-size: 14px;
+                color: $text-777;
+            }
+
+            .inner-contact {
+                background-color: $bg-fff;
+                margin-top: 10px;
+                border: 1px solid $border-eee;
+                padding: 20px;
+                border-radius: $radius-30;
+
+                p {
+                    font-weight: 300;
+                    font-size: 14px;
+                    line-height: 25px;
+                }
+            }
+        }
+    }
+}
+
+
+
+/* Responsive */
+@media screen and (max-width: 1399px) {
+    .bb-testimonials {
+        .testimonials-img-1 {
+            height: 60px;
+            width: 60px;
+            left: 10px;
+        }
+
+        .testimonials-img-4 {
+            top: 20px;
+        }
+
+        .testimonials-img-6 {
+            height: 50px;
+            width: 50px;
+            right: 50px;
+        }
+
+        .inner-banner {
+            left: 0px;
+
+            h4 {
+                font-size: 38px;
+            }
+        }
+
+        .bb-testimonials-inner {
+            max-width: 800px;
+
+            .testimonials-image {
+                .inner-banner {
+                    h4 {
+                        font-size: 36px;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 1199px) {
+    .section-testimonials {
+        &:after {
+            height: 150px;
+            width: 150px;
+        }
+    }
+
+    .bb-testimonials {
+        .testimonials-img-1 {
+            display: none;
+        }
+
+        .testimonials-img-2 {
+            display: none;
+        }
+
+        .testimonials-img-6 {
+            right: 0;
+        }
+
+        .inner-banner {
+            left: -85px;
+
+            h4 {
+                font-size: 34px;
+            }
+        }
+
+        .bb-testimonials-inner {
+            max-width: 800px;
+            margin-left: 70px;
+
+            .testimonials-image {
+                .inner-banner {
+                    h4 {
+                        font-size: 36px;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 991px) {
+    .bb-testimonials {
+        .testimonials-img-3 {
+            display: none;
+        }
+
+        .testimonials-img-4 {
+            display: none;
+        }
+
+        .testimonials-img-5 {
+            display: none;
+        }
+
+        .testimonials-img-6 {
+            display: none;
+        }
+
+        .inner-banner {
+            display: none;
+        }
+    }
+
+    .section-testimonials {
+        &:after {
+            height: 120px;
+            width: 120px;
+        }
+    }
+
+    .bb-testimonials {
+        .bb-testimonials-inner {
+            margin-left: 0px;
+
+            .testimonials-image {
+                .inner-banner {
+                    display: none;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .bb-testimonials {
+        .bb-testimonials-inner {
+            margin-left: 0px;
+
+            .testimonials-contact {
+                .user {
+                    display: flex;
+                    align-items: center;
+                }
+
+                img {
+                    max-width: 60px;
+                    margin-right: 15px;
+                    display: flex;
+                }
+
+                h4 {
+                    margin-bottom: 4px;
+                    font-size: 18px;
+                }
+
+                span {
+                    font-size: 14px;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 575px) {
+    .section-testimonials {
+        &:after {
+            height: 80px;
+            width: 80px;
+        }
+    }
+
+    .bb-testimonials {
+        .bb-testimonials-inner {
+            .testimonials-image {
+                margin-bottom: 20px;
+                max-width: 200px;
+            }
+        }
+    }
+}

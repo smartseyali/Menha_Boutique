@@ -1,0 +1,28 @@
+/* make rows horizontally scrollable on small screens and show 2 columns */
+.bb-scrollable-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+}
+.bb-scrollable-row > * {
+  flex: 0 0 48%; /* two items visible per viewport width */
+  max-width: 48%;
+  scroll-snap-align: start;
+}
+
+/* restore normal behavior on medium+ screens */
+@media (min-width: 768px) {
+  .bb-scrollable-row {
+    display: block;
+    overflow: visible;
+    scroll-snap-type: none;
+    padding-bottom: 0;
+  }
+  .bb-scrollable-row > * {
+    flex: initial;
+    max-width: none;
+  }
+}

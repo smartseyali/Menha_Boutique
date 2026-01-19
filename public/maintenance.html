@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Maintenance - Pattikadai</title>
+    <link rel="icon" href="/assets/img/favicon/favicon.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #8118d5;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            padding: 40px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .logo {
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            max-width: 200px;
+            width: 100%;
+            height: auto;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #666;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            background-color: #f1f1f1;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .contact-info {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            font-size: 0.95rem;
+        }
+
+        .contact-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .contact-item i {
+            color: var(--primary-color);
+        }
+
+        .contact-item a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s;
+            word-break: break-all;
+        }
+
+        .contact-item a:hover {
+            color: var(--primary-color);
+        }
+
+        .footer-copy {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .container {
+                padding: 25px 15px;
+                width: 95%;
+                margin: 10px auto;
+            }
+
+            .contact-item {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="logo">
+            <img src="assets/img/logo/logo.gif" alt="Pattikadai Logo">
+        </div>
+
+        <h1>We'll be back soon!</h1>
+        <p>Sorry for the inconvenience but we're performing some scheduled maintenance at the moment. We'll be back
+            online shortly!</p>
+
+        <div class="social-links">
+            <a href="https://www.facebook.com/share/19riyqAvB9/?mibextid=wwXIfr" target="_blank"
+                rel="noopener noreferrer"><i class="ri-facebook-fill"></i></a>
+            <a href="https://youtube.com/@countryfoodcooking2613?si=mj0BeUdac_IQElB3" target="_blank"
+                rel="noopener noreferrer"><i class="ri-youtube-fill"></i></a>
+            <a href="https://www.instagram.com/countryfoodcooking?igsh=bDNod2JyM2x6OTk1" target="_blank"
+                rel="noopener noreferrer"><i class="ri-instagram-line"></i></a>
+        </div>
+
+        <div class="contact-info">
+            <div class="contact-item">
+                <i class="ri-phone-line"></i>
+                <a href="tel:+919150444595">+91 91504 44595</a>
+            </div>
+            <div class="contact-item">
+                <i class="ri-mail-line"></i>
+                <a href="mailto:pattikadaiofficial@gmail.com">pattikadaiofficial@gmail.com</a>
+            </div>
+            <div class="footer-copy">
+                &copy; 2024 Pattikadai. All rights reserved.
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

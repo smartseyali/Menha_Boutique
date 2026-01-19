@@ -1,0 +1,25 @@
+/* Terms */
+
+.section-terms {
+    .desc {
+        padding: 30px;
+        border: 1px solid #eee;
+        border-radius: $radius-20;
+
+        h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        p {
+            font-weight: 400;
+        }
+
+        .block {
+            &:not(:last-child) {
+                margin-bottom: 24px;
+            }
+        }
+    }
+}

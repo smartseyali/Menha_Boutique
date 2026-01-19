@@ -1,0 +1,55 @@
+/* Contact */
+.bb-contact-form {
+    border: 1px solid $border-eee;
+    border-radius: $radius-20;
+    padding: 30px;
+
+    .bb-contact-wrap {
+        margin-bottom: 24px;
+
+        input,
+        textarea {
+            width: 100%;
+            height: 50px;
+            padding: 10px 10px 10px 15px;
+            outline: 0;
+            font-size: 14px;
+            font-weight: 400;
+            color: $text-color;
+            border-radius: $radius-10;
+
+            &::placeholder {
+                font-size: 14px;
+                font-weight: 400;
+                color: $text-color;
+            }
+        }
+
+        textarea:not(:invalid) {
+            border: 1px solid $border-eee;
+            ;
+        }
+
+        textarea {
+            height: 150px;
+        }
+    }
+
+    .bb-contact-button {
+        button {
+            padding: 4px 25px;
+        }
+    }
+}
+
+.bb-contact-maps {
+    position: sticky;
+    top: 0;
+
+    iframe {
+        width: 100%;
+        height: 577px;
+        margin-bottom: -10px;
+        border-radius: $radius-20;
+    }
+}

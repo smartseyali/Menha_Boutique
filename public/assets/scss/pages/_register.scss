@@ -1,0 +1,104 @@
+/* Register */
+.bb-register {
+    border: 1px solid $border-eee;
+    padding: 30px;
+    border-radius: $radius-20;
+
+    form {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -12px;
+
+        .bb-register-width-50 {
+            width: 50%;
+        }
+
+        .bb-register-width-100 {
+            width: 100%;
+        }
+
+        .bb-register-wrap {
+            padding: 0 12px;
+            margin-bottom: 24px;
+
+            label {
+                margin-bottom: 6px;
+                font-size: 14px;
+                line-height: 18px;
+                font-weight: 500;
+                color: $title-color;
+            }
+
+            input,
+            .custom-select {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+                font-weight: 400;
+                color: $text-color;
+                outline: 0;
+                border-radius: 10px !important;
+            }
+
+            input:not(:invalid) {
+                border: 1px solid $border-eee;
+            }
+
+            select,
+            .custom-select {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+                font-weight: 400;
+                color: $text-color;
+                outline: 0;
+                border-radius: 10px;
+            }
+
+            select:not(:invalid) {
+                border: 1px solid $border-eee;
+            }
+
+            textarea,
+            .custom-select {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+                font-weight: 400;
+                color: $text-color;
+                outline: 0;
+                border-radius: 10px;
+            }
+
+            textarea:not(:invalid) {
+                border: 1px solid $border-eee;
+            }
+
+            .custom-select {
+                .custom-select {
+                    padding: 0;
+                    border: 0;
+                }
+            }
+        }
+
+        .bb-register-button {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+
+            button {
+                padding: 4px 20px;
+            }
+        }
+    }
+}
+
+/* Responsive footer css */
+@media only screen and (max-width: 575px) {
+    .bb-register form {
+        .bb-register-width-50 {
+            width: 100%;
+        }
+    }
+}

@@ -1,0 +1,92 @@
+/* Instagram */
+.section-instagram {
+    position: relative;
+
+    .bb-title {
+        margin: auto;
+        padding: 15px 30px;
+        background-color: #fff;
+        border-radius: 30px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 5;
+        transform: translate(-50%, -50%);
+
+        h3 {
+            font-size: 28px;
+        }
+    }
+}
+
+.bb-instagram-card {
+    .instagram-img {
+        position: relative;
+        overflow: hidden;
+        border-radius: $radius-30;
+
+        &::before {
+            @include ease3;
+            content: "";
+            height: 100%;
+            width: 100%;
+            background-color: $black_05;
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            right: 0;
+            opacity: 0;
+            border-radius: $radius-30;
+        }
+
+        &:hover {
+            &::before {
+                opacity: 1;
+            }
+
+            &::after {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        img {
+            width: 100%;
+            border-radius: $radius-20;
+        }
+
+        &::after {
+            @include ease3;
+            font-family: $remixico;
+            content: "\EE66";
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            right: 0;
+            opacity: 0;
+            font-size: 38px;
+            color: $text-fff;
+            transform: scale(3) rotate(50deg);
+        }
+    }
+}
+
+/* Responsive footer css */
+@media only screen and (max-width: 991px) {
+    .section-instagram {
+        .bb-title {
+            padding: 8px 20px;
+        }
+
+        .bb-title {
+            h3 {
+                font-size: 25px;
+            }
+        }
+    }
+}

@@ -1,0 +1,275 @@
+// Admin Layout Styles
+.admin-layout-wrapper {
+    min-height: 100vh;
+    background: #f5f5f5;
+}
+
+.bb-admin-layout-header {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    .admin-logo {
+        text-decoration: none;
+        color: #333;
+
+        h4 {
+            color: #007bff;
+            font-weight: 700;
+        }
+    }
+
+    .admin-user-info {
+        color: #666;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+
+        i {
+            color: #999;
+        }
+    }
+}
+
+.admin-layout-content {
+    padding: 0;
+    min-height: calc(100vh - 70px);
+}
+
+// Admin Dashboard Styles
+.section-admin {
+    .bb-admin-header {
+        h2 {
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 0;
+        }
+    }
+
+    .bb-admin-tabs {
+        border-bottom: 2px solid #e0e0e0;
+        
+        .nav-link {
+            color: #666;
+            padding: 12px 20px;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            
+            &:hover {
+                color: #333;
+                border-bottom-color: #ddd;
+            }
+            
+            &.active {
+                color: #007bff;
+                background: transparent;
+                border-bottom-color: #007bff;
+                font-weight: 600;
+            }
+            
+            i {
+                margin-right: 8px;
+            }
+        }
+    }
+
+    .bb-admin-stat-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        height: 100%;
+        
+        &:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 24px;
+            color: #007bff;
+        }
+        
+        .stat-content {
+            flex: 1;
+            
+            h3 {
+                font-size: 28px;
+                font-weight: 700;
+                margin-bottom: 5px;
+                color: #333;
+            }
+            
+            h4 {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 10px;
+                color: #666;
+            }
+            
+            p {
+                font-size: 14px;
+                color: #999;
+                margin-bottom: 0;
+            }
+            
+            .orders-status-list {
+                margin-top: 10px;
+                
+                .status-item {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                    border-bottom: 1px solid #f0f0f0;
+                    
+                    &:last-child {
+                        border-bottom: none;
+                    }
+                    
+                    .status-name {
+                        text-transform: capitalize;
+                        color: #666;
+                    }
+                    
+                    .status-count {
+                        font-weight: 600;
+                        color: #333;
+                    }
+                }
+            }
+        }
+    }
+
+    .bb-admin-loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    .bb-admin-products,
+    .bb-admin-categories,
+    .bb-admin-orders {
+        .bb-admin-header {
+            margin-bottom: 20px;
+            
+            h4 {
+                margin-bottom: 0;
+            }
+        }
+        
+        table {
+            background: #fff;
+            
+            th {
+                background: #f8f9fa;
+                font-weight: 600;
+                color: #333;
+                border-bottom: 2px solid #dee2e6;
+            }
+            
+            td {
+                vertical-align: middle;
+            }
+            
+            .badge {
+                padding: 6px 12px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+        }
+        
+        .bb-admin-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+    }
+
+    .modal {
+        .modal-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            
+            .modal-title {
+                font-weight: 600;
+                color: #333;
+            }
+        }
+        
+        .modal-body {
+            padding: 20px;
+            
+            h5 {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 15px;
+                color: #333;
+            }
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #dee2e6;
+            padding: 15px 20px;
+        }
+    }
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+    .section-admin {
+        .bb-admin-stat-card {
+            margin-bottom: 20px;
+            
+            .stat-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                margin-right: 15px;
+            }
+            
+            .stat-content {
+                h3 {
+                    font-size: 24px;
+                }
+            }
+        }
+        
+        .bb-admin-tabs {
+            .nav-link {
+                padding: 10px 15px;
+                font-size: 14px;
+                
+                i {
+                    margin-right: 5px;
+                }
+            }
+        }
+        
+        table {
+            font-size: 14px;
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    }
+}
+

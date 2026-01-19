@@ -1,0 +1,185 @@
+/* About */
+.bb-about-img {
+    position: sticky;
+    top: 0;
+
+    img {
+        width: 100%;
+    }
+}
+
+.bb-about-contact {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .section-title {
+        margin-bottom: 0;
+        padding-bottom: 12px;
+    }
+
+    .about-inner-contact {
+        margin-bottom: 14px;
+
+        h4 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: $title-color;
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        p {
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+    }
+}
+
+.bb-vendor-rows {
+    .bb-vendor-box {
+        padding: 20px;
+        background-color: $bg-box;
+        border: 1px solid $border-eee;
+        border-radius: $radius-20;
+
+        .bb-count {
+            margin-bottom: 12px;
+
+            h5 {
+                font-size: 32px;
+                line-height: 24px;
+                color: $title-color;
+                font-weight: 700;
+            }
+        }
+
+        .inner-text {
+            p {
+                font-size: 14px;
+                line-height: 18px;
+                color: $text-color;
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+.bb-team-box {
+    &:hover {
+        .bb-team-img {
+            .bb-team-socials {
+                right: 0;
+            }
+        }
+    }
+
+    .bb-team-img {
+        margin-bottom: 20px;
+        position: relative;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+
+        .bb-team-socials {
+            @include ease3;
+            background-color: $bg-fff;
+            border-top-left-radius: $radius-20;
+            border-bottom-left-radius: $radius-20;
+            position: absolute;
+            right: -38px;
+
+            .inner-shape {
+                position: relative;
+
+                &:before {
+                    content: "";
+                    height: 20px;
+                    width: 20px;
+                    position: absolute;
+                    top: -20px;
+                    right: 0;
+                    background-size: 100%;
+                    background-image: url("../img/team/top-shape.png");
+                    background-repeat: no-repeat;
+                }
+
+                &:after {
+                    content: "";
+                    height: 20px;
+                    width: 20px;
+                    position: absolute;
+                    top: 147px;
+                    right: 0;
+                    background-size: 100%;
+                    background-image: url("../img/team/bottom-shape.png");
+                    background-repeat: no-repeat;
+                }
+            }
+
+            ul {
+                margin-bottom: 0;
+                padding: 20px 10px;
+
+                li {
+                    &:not(:last-child) {
+                        padding-bottom: 10px;
+                    }
+
+                    a {
+                        i {
+                            font-size: 16px;
+
+                            &:hover {
+                                color: $primary;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        img {
+            width: 100%;
+            border-radius: $radius-20;
+        }
+    }
+
+    .bb-team-contact {
+        text-align: center;
+
+        h5 {
+            font-size: 18px;
+            font-weight: 700;
+            color: $title-color;
+        }
+
+        p {
+            font-size: 15px;
+            color: $text-color;
+        }
+    }
+}
+
+/* Responsive footer css */
+@media only screen and (max-width: 1399px) {
+    .bb-vendor-rows {
+        .bb-vendor-box {
+            .bb-count {
+                margin-bottom: 8px;
+
+                h5 {
+                    font-size: 28px;
+                }
+            }
+
+            .inner-text {
+                p {
+                    font-size: 14px;
+                }
+            }
+        }
+    }
+}

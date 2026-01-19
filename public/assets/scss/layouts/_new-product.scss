@@ -1,0 +1,42 @@
+/* new product */
+.bb-pro-tab {
+    ul.bb-pro-tab-nav {
+        margin: 0 -20px;
+
+        li {
+            a {
+                padding: 0 20px;
+                font-size: 16px;
+                color: $text-color;
+                font-weight: 500;
+                text-transform: capitalize;
+            }
+
+            a.active {
+                color: $primary !important;
+            }
+
+            &:not(:last-child) {
+                position: relative;
+
+                &:after {
+                    content: "/";
+                    position: absolute;
+                    right: -4px;
+                    top: 0;
+                    font-size: 12px;
+                    color: $text-color;
+                }
+            }
+        }
+    }
+}
+
+/*  Responsive  */
+@media only screen and (max-width: 991px) {
+    .bb-pro-tab {
+        ul.bb-pro-tab-nav {
+            justify-content: center;
+        }
+    }
+}

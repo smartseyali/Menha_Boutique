@@ -1,0 +1,40 @@
+/* login */
+.bb-login-contact {
+    max-width: 500px;
+    margin: auto;
+    border: 1px solid $border-eee;
+    padding: 30px;
+    border-radius: $radius-20;
+
+    .bb-login-wrap {
+        margin-bottom: 24px;
+
+        a {
+            font-size: 14px;
+            font-weight: 500;
+            color: $text-777;
+        }
+    }
+
+    .bb-login-button {
+        margin: -5px;
+        display: flex;
+        justify-content: space-between;
+
+        button {
+            margin: 5px;
+            padding: 4px 20px;
+        }
+
+        a {
+            height: 36px;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+
+            &:hover {
+                color: $primary;
+            }
+        }
+    }
+}

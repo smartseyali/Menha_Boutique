@@ -1,0 +1,224 @@
+/* tools-sidebar */
+.bb-tools-sidebar-overlay {
+	display: none;
+	width: 100%;
+	height: 100vh;
+	position: fixed;
+	top: 0;
+	left: 0;
+	background-color: $black_05;
+	z-index: 16;
+}
+
+.bb-tools-sidebar {
+	width: 300px;
+	height: 100vh;
+	position: fixed;
+	right: 0;
+	top: 0;
+	background-color: $bg-fff;
+	transition: all 0.3s ease;
+	z-index: 16;
+	transform: translateX(300px);
+
+	.bb-tools-sidebar-toggle {
+		position: absolute;
+		top: 45%;
+		right: 302px;
+		width: 40px;
+		height: 40px;
+		background-color: $secondary;
+		transition: all ease-in 0.3s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 25px;
+		z-index: -1;
+		text-decoration: none;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.102);
+		border-radius: 5px;
+		cursor: pointer;
+
+		i {
+			font-size: 20px;
+			color: $text-fff;
+		}
+	}
+
+	.bb-bar-title {
+		margin-bottom: 15px;
+		padding: 15px;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		border-bottom: 1px solid $border-eee;
+
+		h6 {
+			margin: 0;
+			font-size: 17px;
+			font-weight: 700;
+			color: $title-color;
+		}
+
+		.close-tools {
+			color: $close-color !important;
+			font-size: 17px;
+			font-weight: 600;
+		}
+	}
+
+	.bb-tools-detail {
+		@include scrollbar;
+		height: calc(100vh - 72px);
+		padding: 0 15px 15px 15px;
+		overflow: auto;
+
+		.bb-tools-block {
+			h3 {
+				margin: 15px 0;
+				font-size: 14px;
+				font-weight: 700;
+				color: $title-color;
+			}
+
+			p {
+				margin: 0;
+				font-size: 14px;
+				font-weight: 600;
+				text-transform: capitalize;
+			}
+
+			.bb-color {
+				margin: 0;
+				padding: 0;
+
+				li {
+					display: inline-block;
+					height: 35px;
+					width: 35px;
+					border-radius: 5px;
+					cursor: pointer;
+					vertical-align: middle;
+					margin: 6px;
+					position: relative;
+				}
+			}
+
+			.bb-tools-dark,
+			.bb-tools-box,
+			.bb-tools-rtl {
+				display: flex;
+				flex-wrap: wrap;
+				flex-direction: row;
+				justify-content: space-between;
+
+				.bb-tools-item,
+				.bb-dark-item {
+					width: 125px;
+					margin-bottom: 10px;
+					text-align: center;
+
+					img {
+						width: 100%;
+						padding: 5px;
+						border-radius: 10px;
+						border: 1px solid $border-eee;
+
+						&:hover {
+							border: 1px solid $primary;
+						}
+					}
+				}
+
+				.active-dark,
+				.active-box,
+				.active-rtl {
+					position: relative;
+
+					img {
+						border-color: $primary;
+					}
+
+					&:after {
+						content: "\EB79";
+						width: 30px;
+						height: 30px;
+						font-size: 20px;
+						font-family: $remixico;
+						position: absolute;
+						top: 10px;
+						right: 10px;
+						border-radius: 10px;
+						background-color: $primary;
+						color: $text-fff;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+					}
+				}
+			}
+		}
+	}
+}
+
+.active-variant {
+	position: relative;
+
+	&:after {
+		font-family: $remixico;
+		content: "\EB79";
+		height: 35px;
+		width: 35px;
+		font-size: 20px;
+		position: absolute;
+		color: $text-fff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+}
+
+.color-primary {
+	background: $primary;
+}
+
+.color-1 {
+	background: $color-1;
+}
+
+.color-2 {
+	background: $color-2;
+}
+
+.color-3 {
+	background: $color-3;
+}
+
+.color-4 {
+	background: $color-4;
+}
+
+.color-5 {
+	background: $color-5;
+}
+
+.color-6 {
+	background: $color-6;
+}
+
+.color-7 {
+	background: $color-7;
+}
+
+.color-8 {
+	background: $color-8;
+}
+
+.color-9 {
+	background: $color-9;
+}
+
+.open-tools {
+	transform: translateX(0);
+}

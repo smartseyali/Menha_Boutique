@@ -1,0 +1,543 @@
+/* Single product page */
+.bb-single-pro {
+    margin-bottom: 24px;
+}
+
+.single-pro-slider {
+    position: sticky;
+    top: 0;
+    padding: 15px;
+    border: 1px solid $border-eee;
+    border-radius: $radius-20;
+
+    .single-nav-thumb {
+        width: 100%;
+        overflow: hidden;
+
+        .slick-list {
+            margin: 0 -8px;
+            overflow: visible;
+        }
+
+        .slick-track {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center;
+        }
+
+        .single-slide {
+            padding: 0px 10px 0 10px;
+            display: inline-block !important;
+            vertical-align: top;
+            float: left;
+
+            .iiz__hint {
+
+                &::before {
+                    display: none;
+                }
+            }
+
+            img {
+                display: block;
+                width: 100%;
+                height: auto;
+                max-height: 100px;
+                object-fit: cover;
+            }
+        }
+
+        .slick-slide {
+            img {
+                border: 1px solid transparent;
+                transition: all 0.3s ease 0s;
+                cursor: pointer;
+                border-radius: $radius-15;
+            }
+
+            &:hover {
+                img {
+                    border-color: $primary;
+                }
+            }
+        }
+
+        .slick-slide.slick-current.slick-active {
+            img {
+                border-color: $primary;
+            }
+        }
+
+        .slick-arrow {
+            top: 42%;
+        }
+
+        button {
+            background: transparent;
+            outline: 0;
+            border: 0;
+        }
+
+        .slick-arrow.slick-prev {
+            left: 0;
+            right: auto;
+        }
+
+        .slick-arrow {
+            position: absolute;
+            top: 55%;
+            left: auto;
+            right: auto;
+            margin: 0 auto;
+            font-size: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            z-index: 1;
+            transform: translateY(-50%);
+
+            &:before {
+                content: "";
+                color: $text-color;
+                position: relative;
+                font-size: 42px;
+                width: 100%;
+                line-height: 30px;
+                height: 30px;
+            }
+        }
+
+        .slick-arrow.slick-prev {
+            &:before {
+                font-family: $remixico;
+                content: "\EA52";
+            }
+        }
+
+        .slick-arrow.slick-next {
+            right: 0;
+            left: auto;
+
+            &:before {
+                font-family: $remixico;
+                content: "\EA54";
+            }
+        }
+    }
+
+    .single-product-cover {
+        .zoom-image-hover {
+            border-top-left-radius: $radius-15;
+            border-top-right-radius: $radius-15;
+
+            img {
+                border-top-left-radius: $radius-15;
+                border-top-right-radius: $radius-15;
+            }
+        }
+    }
+}
+.tab-content {
+    .tab-pane {
+        p {
+            a {
+                color: $primary !important;
+            }
+        }
+    }
+}
+.bb-single-pro-contact {
+    .bb-sub-title {
+        margin-bottom: 20px;
+
+        h4 {
+            font-size: 22px;
+            font-weight: 700;
+            color: $title-color;
+        }
+    }
+
+    .bb-single-rating {
+        margin-bottom: 12px;
+
+        .bb-pro-rating {
+            margin-right: 10px;
+        }
+
+        .bb-read-review {
+            a {
+                color: $primary !important;
+            }
+        }
+    }
+
+    .bb-single-price-wrap {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+
+        .bb-single-price {
+            padding: 15px 0;
+
+            .price {
+                margin-bottom: 8px;
+
+                h5 {
+                    font-size: 20px;
+                    font-weight: 800;
+                    color: $title-color;
+
+                    span {
+                        font-size: 20px;
+                        color: $primary;
+                    }
+                }
+            }
+
+            .sku {
+                margin-bottom: 8px;
+
+                h5 {
+                    font-size: 18px;
+                    font-weight: 800;
+                    color: $title-color;
+                }
+            }
+
+            .mrp {
+                p {
+                    font-size: 16px;
+
+                    span {
+                        font-size: 15px;
+                        text-decoration: line-through;
+                    }
+                }
+            }
+
+            .stock {
+                span {
+                    font-size: 18px;
+                    color: $primary;
+                }
+            }
+        }
+    }
+
+    .bb-single-pro-weight {
+        margin-bottom: 24px;
+
+        .pro-title {
+            margin-bottom: 12px;
+
+            h4 {
+                font-size: 16px;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
+        }
+
+        .bb-pro-variation-contant {
+            ul {
+                display: flex;
+                flex-wrap: wrap;
+                margin: -2px;
+
+                li {
+                    margin: 10px 2px;
+                    padding: 2px 15px;
+                    border: 1px solid $border-eee;
+                    border-radius: $radius-10;
+                    cursor: pointer;
+
+                    span {
+                        font-size: 14px;
+                    }
+                }
+
+                li.active-variation {
+                    background-color: $primary;
+                    color: $text-fff !important;
+                }
+            }
+        }
+    }
+
+    .bb-single-list {
+        margin-bottom: 30px;
+
+        ul {
+            margin: -8px 0;
+            padding-left: 18px;
+
+            li {
+                margin: 8px 0;
+                color: $text-777;
+                font-size: 14px;
+                list-style-type: disc;
+            }
+        }
+    }
+
+    .bb-single-qty {
+        display: flex;
+        flex-wrap: wrap;
+        margin: -2px;
+
+        .qty-plus-minus {
+            margin: 2px;
+        }
+
+        .buttons {
+            margin: 2px;
+
+            a {
+                height: 40px;
+                display: flex;
+                padding: 6px 25px;
+            }
+        }
+
+        .bb-pro-actions {
+            margin: 2px 0;
+            display: flex;
+
+            a {
+                @include ease3;
+                width: 40px;
+                height: 40px;
+                margin: 0 2px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                color: $text-fff;
+                background-color: $bg-fff;
+                border: 1px solid $border-eee;
+                border-radius: 10px;
+
+                i {
+                    @include ease3;
+                    font-size: 16px;
+                    color: $text-777;
+                    line-height: 10px;
+                }
+
+                &:hover {
+                    background-color: $primary;
+
+                    i {
+                        color: $text-fff;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.bb-single-pro-tab {
+    .bb-pro-tab {
+        margin-bottom: 24px;
+    }
+}
+
+.bb-inner-tabs,
+.bey-single-accordion {
+    border: 1px solid $border-eee;
+    padding: 15px;
+    border-radius: $radius-20;
+
+    .bb-details {
+        p {
+            margin-bottom: 12px;
+            font-weight: 300;
+        }
+
+        .details-info {
+            ul {
+                list-style-type: disc;
+                padding-left: 20px;
+                margin-bottom: 0;
+
+                li {
+                    padding: 5px 0;
+                    font-size: 15px;
+                    color: $text-color;
+                    line-height: 28px;
+
+                    span {
+                        display: inline-flex;
+                        font-weight: 500;
+                        min-width: 150px;
+                    }
+                }
+            }
+        }
+    }
+
+    .information {
+        ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-bottom: 0;
+
+            li {
+                padding: 5px 0;
+                font-size: 15px;
+                color: $text-color;
+                line-height: 28px;
+
+                span {
+                    display: inline-flex;
+                    font-weight: 500;
+                    min-width: 130px;
+                }
+            }
+        }
+    }
+
+    .bb-reviews {
+        .reviews-bb-box {
+            display: flex;
+            margin-bottom: 24px;
+
+            .inner-image {
+                margin-right: 12px;
+
+                img {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: $radius-10;
+                }
+            }
+
+            .inner-contact {
+                h4 {
+                    margin-top: 5px;
+                    font-size: 16px;
+                    font-weight: 700;
+                }
+
+                .bb-pro-rating {
+                    display: flex;
+                }
+
+                p {
+                    font-size: 14px;
+                    line-height: 26px;
+                    font-weight: 300;
+                }
+            }
+        }
+    }
+
+    .bb-reviews-form {
+        h3 {
+            margin-bottom: 8px;
+            font-size: 20px;
+            font-weight: 700;
+            color: $title-color;
+        }
+
+        .bb-review-rating {
+            display: flex;
+            margin-bottom: 12px;
+
+            span {
+                padding-right: 10px;
+                font-size: 15px;
+                font-weight: 600;
+                color: $title-color;
+            }
+        }
+
+        .input-box {
+            margin-bottom: 24px;
+
+            input,
+            textarea {
+                width: 100%;
+                height: 50px;
+                // border: 1px solid $border-eee;
+                padding-left: 20px;
+                outline: 0;
+                font-size: 14px;
+                font-weight: 400;
+                color: $text-777;
+                border-radius: $radius-20;
+
+                &::placeholder {
+                    font-size: 14px;
+                    font-weight: 400;
+                    color: $text-777;
+                }
+            }
+
+            input textarea:not(:invalid) {
+                border: 1px solid $border-eee;
+            }
+
+            textarea {
+                padding: 10px 10px 10px 20px;
+                height: 100px;
+            }
+        }
+
+        .input-button {
+            a {
+                display: inline-flex;
+                padding: 4px 15px;
+            }
+        }
+    }
+
+    .accordion {
+        margin: -24px 0;
+
+        .accordion-item {
+            border-radius: 0;
+            border: 0;
+            margin: 24px 0;
+
+            .accordion-header {
+                .accordion-button {
+                    box-shadow: none;
+                    background: transparent;
+                    border: 1px solid $border-eee;
+                    border-radius: $radius-15;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: $title-color;
+                }
+            }
+        }
+    }
+}
+
+/* Responsive footer css */
+@media only screen and (max-width: 991px) {
+    .single-pro-slider {
+        max-width: 500px;
+        margin: auto;
+    }
+}
+
+@media only screen and (max-width: 575px) {
+
+    .bb-inner-tabs,
+    .bey-single-accordion {
+        .bb-reviews {
+            .reviews-bb-box {
+                flex-direction: column;
+
+                .inner-image {
+                    margin-right: 0;
+                    margin-bottom: 12px;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,77 @@
+/* Faq */
+.bb-faq-img {
+    position: sticky;
+    top: 0;
+
+    img {
+        width: 100%;
+        border-radius: $radius-20;
+    }
+}
+
+.accordion-item {
+    background: transparent;
+}
+
+.accordion-button {
+    &:after {
+        background-image: none;
+        transform: none;
+        font-family: $remixico;
+        content: '\F1AF';
+        font-size: 20px;
+        font-weight: 500;
+        color: $title-color;
+    }
+
+    &:not(.collapsed) {
+        &:after {
+            background-image: none;
+            transform: none;
+            font-family: $remixico;
+            content: '\EA13';
+            font-size: 20px;
+            font-weight: 500;
+            color: $title-color;
+        }
+    }
+}
+
+.bb-faq-contact {
+    margin-bottom: -24px;
+
+    .accordion-item {
+        border-radius: 0;
+        border: 0;
+        outline: 0;
+        margin-bottom: 24px;
+
+        .accordion-button {
+            background: transparent;
+            border-radius: $radius-15 !important;
+            border: 1px solid $border-eee;
+            outline: 0;
+            box-shadow: none;
+        }
+
+        .accordion-body {
+            padding: 15px 15px 0;
+        }
+    }
+
+    .accordion-header {
+        font-size: 16px;
+
+        .accordion-button {
+            font-size: 16px;
+            font-weight: 600;
+            color: $title-color;
+        }
+    }
+
+    .accordion-body {
+        font-size: 14px;
+        font-weight: 300;
+        color: $text-color;
+    }
+}

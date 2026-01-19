@@ -1,0 +1,31 @@
+/* services */
+.bb-services-box {
+    width: auto;
+    padding: 30px;
+    border: 1px solid $border-eee;
+    border-radius: $radius-20;
+    text-align: center;
+
+    .services-img {
+        margin-bottom: 20px;
+
+        img {
+            width: 50px;
+        }
+    }
+
+    .services-contact {
+        h4 {
+            margin-bottom: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            color: $title-color;
+        }
+
+        p {
+            font-size: 14px;
+            line-height: 20px;
+            color: $text-color;
+        }
+    }
+}
