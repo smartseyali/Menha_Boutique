@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
         subDir = 'videos';
       }
       
-      const uploadPath = path.resolve(backendDir, `../public/assets/${subDir}`);
+      const uploadPath = path.resolve(backendDir, `public/assets/${subDir}`);
       
       console.log('=== UPLOAD DESTINATION ===');
       console.log('__dirname (uploadController):', __dirname);
