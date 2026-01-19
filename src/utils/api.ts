@@ -1,5 +1,5 @@
 // API service utility for backend communication
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pattikadai.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://menhaapi.smartseyali.app';
 
 // Review API
 export const reviewApi = {

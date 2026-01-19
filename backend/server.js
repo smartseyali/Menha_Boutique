@@ -6,22 +6,14 @@ const config = require('./src/config/config');
 const app = express();
 
 // CORS configuration
+// CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      config.cors.origin
-    ].filter(Boolean);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || config.server.env === 'development') {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Allow all origins to support mobile apps and diverse clients
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],

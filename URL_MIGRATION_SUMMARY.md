@@ -1,7 +1,7 @@
 # URL Migration Summary: thandattifoods.com → pattikadai.com
 
 ## Overview
-Successfully migrated the Thandatti Foods application to use **pattikadai.com** as the main domain and **api.pattikadai.com** for the API backend.
+Successfully migrated the Thandatti Foods application to use **pattikadai.com** as the main domain and **menhaapi.smartseyali.app** for the API backend.
 
 ## Changes Made
 
@@ -9,11 +9,11 @@ Successfully migrated the Thandatti Foods application to use **pattikadai.com** 
 
 #### `.env.local` (Frontend Local Development)
 - **Before**: `NEXT_PUBLIC_API_BASE_URL=https://api.thandattifoods.com`
-- **After**: `NEXT_PUBLIC_API_BASE_URL=http://localhost:5000` (local) or `https://api.pattikadai.com` (production - commented)
+- **After**: `NEXT_PUBLIC_API_BASE_URL=http://localhost:5000` (local) or `https://menhaapi.smartseyali.app` (production - commented)
 
 #### `.env.production` (Already Correct)
 - `NEXT_PUBLIC_DOMAIN=https://pattikadai.com`
-- `NEXT_PUBLIC_API_BASE_URL=https://api.pattikadai.com`
+- `NEXT_PUBLIC_API_BASE_URL=https://menhaapi.smartseyali.app`
 
 #### `backend/.env` (Backend Configuration)
 - **CORS Configuration Updated**:
@@ -37,10 +37,10 @@ Successfully migrated the Thandatti Foods application to use **pattikadai.com** 
 - **Frontend Server Block**:
   - `server_name pattikadai.com www.pattikadai.com`
   - Root path updated: `/var/www/pattikadai_frontend`
-  - API redirects to: `https://api.pattikadai.com`
+  - API redirects to: `https://menhaapi.smartseyali.app`
 
 - **API Server Block**:
-  - `server_name api.pattikadai.com`
+  - `server_name menhaapi.smartseyali.app`
   - Backend proxy: `http://127.0.0.1:5000`
 
 - **Deployment Instructions**:
@@ -106,14 +106,14 @@ createdb pattikadai
 - [ ] Update DNS records:
   - A record: `pattikadai.com` → your server IP
   - A record: `www.pattikadai.com` → your server IP  
-  - CNAME record: `api.pattikadai.com` → your server or main domain
+  - CNAME record: `menhaapi.smartseyali.app` → your server or main domain
 - [ ] Request SSL certificates:
   ```bash
-  certbot --nginx -d pattikadai.com -d www.pattikadai.com -d api.pattikadai.com
+  certbot --nginx -d pattikadai.com -d www.pattikadai.com -d menhaapi.smartseyali.app
   ```
 - [ ] Test API connectivity:
   ```bash
-  curl https://api.pattikadai.com/health
+  curl https://menhaapi.smartseyali.app/health
   curl https://pattikadai.com/api/products
   ```
 
@@ -131,5 +131,5 @@ All hardcoded references to `thandattifoods.com` have been removed and replaced 
 
 The application is now fully configured to host at:
 - **Frontend**: https://pattikadai.com
-- **API**: https://api.pattikadai.com
+- **API**: https://menhaapi.smartseyali.app
 - **Database**: pattikadai

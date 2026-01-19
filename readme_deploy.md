@@ -1,10 +1,10 @@
 **Readme Deploy**
 
-This file describes how to deploy the project to a production Ubuntu server (DigitalOcean Droplet) and host the UI at `thanndattifoods.com` and the API at `api.pattikadai.com`.
+This file describes how to deploy the project to a production Ubuntu server (DigitalOcean Droplet) and host the UI at `thanndattifoods.com` and the API at `menhaapi.smartseyali.app`.
 
 **Prerequisites**
 - Ubuntu 22.04+ server with a public IP
-- Domain DNS control (set A records for `thanndattifoods.com` and `api.pattikadai.com` to the server IP)
+- Domain DNS control (set A records for `thanndattifoods.com` and `menhaapi.smartseyali.app` to the server IP)
 - SSH access to the server and an SSH key added to Droplet
 - Node.js 18+ (LTS) installed on the server or use Docker
 - `nginx`, `certbot`, and `pm2` (or Docker) installed on the server
@@ -56,7 +56,7 @@ git clone https://github.com/<your-org>/thandatti_foods.git .
 
 ```dotenv
 NEXT_PUBLIC_DOMAIN="https://pattikadai.com"
-NEXT_PUBLIC_API_BASE_URL=https://api.pattikadai.com
+NEXT_PUBLIC_API_BASE_URL=https://menhaapi.smartseyali.app
 NEXT_TELEMETRY_DISABLED=1
 NODE_ENV=production
 ```
@@ -119,7 +119,7 @@ Adjust the backend `proxy_pass` port if you started the backend on a different p
 **Obtain TLS certificates (Let's Encrypt)**
 
 ```bash
-sudo certbot --nginx -d pattikadai.com -d www.pattikadai.com -d api.pattikadai.com
+sudo certbot --nginx -d pattikadai.com -d www.pattikadai.com -d menhaapi.smartseyali.app
 # Test renewal
 sudo certbot renew --dry-run
 ```

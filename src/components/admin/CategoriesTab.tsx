@@ -332,7 +332,7 @@ const CategoriesTab = () => {
                                                             const imagePath = response.imagePath;
                                                             const fullUrl = imagePath.startsWith('http') 
                                                                 ? imagePath 
-                                                                : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pattikadai.com'}${imagePath}`;
+                                                                : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://menhaapi.smartseyali.app'}${imagePath}`;
                                                             
                                                             setFormData(prev => ({ ...prev, image: fullUrl }));
                                                             showSuccessToast('Image uploaded successfully');

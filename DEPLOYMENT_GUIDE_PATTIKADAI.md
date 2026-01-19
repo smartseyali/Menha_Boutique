@@ -24,7 +24,7 @@ Update your DNS provider with these records:
 ```
 pattikadai.com          A       <your-server-ip>
 www.pattikadai.com      A       <your-server-ip>
-api.pattikadai.com      CNAME   pattikadai.com (or your server IP)
+menhaapi.smartseyali.app      CNAME   pattikadai.com (or your server IP)
 ```
 
 Wait for DNS propagation (typically 5-30 minutes).
@@ -35,7 +35,7 @@ Once DNS is propagated, request SSL certificates:
 
 ```bash
 # On your server
-sudo certbot --nginx -d pattikadai.com -d www.pattikadai.com -d api.pattikadai.com
+sudo certbot --nginx -d pattikadai.com -d www.pattikadai.com -d menhaapi.smartseyali.app
 ```
 
 ## Environment Configuration for Production
@@ -44,7 +44,7 @@ sudo certbot --nginx -d pattikadai.com -d www.pattikadai.com -d api.pattikadai.c
 Currently set correctly to:
 ```env
 NEXT_PUBLIC_DOMAIN="https://pattikadai.com"
-NEXT_PUBLIC_API_BASE_URL=https://api.pattikadai.com
+NEXT_PUBLIC_API_BASE_URL=https://menhaapi.smartseyali.app
 ```
 
 ### Backend (.env) - PRODUCTION VALUES
@@ -138,10 +138,10 @@ Test your deployment with these commands:
 
 ```bash
 # Test API health
-curl -I https://api.pattikadai.com/health
+curl -I https://menhaapi.smartseyali.app/health
 
 # Test API products endpoint
-curl https://api.pattikadai.com/api/products
+curl https://menhaapi.smartseyali.app/api/products
 
 # Test frontend (should redirect properly)
 curl -I https://pattikadai.com/
@@ -151,7 +151,7 @@ curl -H "Origin: https://pattikadai.com" \
      -H "Access-Control-Request-Method: GET" \
      -H "Access-Control-Request-Headers: Content-Type" \
      -X OPTIONS \
-     https://api.pattikadai.com/api/products -v
+     https://menhaapi.smartseyali.app/api/products -v
 ```
 
 ## Monitoring After Deployment
@@ -198,7 +198,7 @@ createdb pattikadai -U dbadmin -h 159.89.163.255
 ```
 
 #### Issue 3: API Not Responding
-**Error**: `Cannot reach api.pattikadai.com`
+**Error**: `Cannot reach menhaapi.smartseyali.app`
 
 **Solution**:
 ```bash
@@ -276,7 +276,7 @@ crontab -e
 After successful deployment, verify:
 
 ✅ Frontend loads at `https://pattikadai.com`  
-✅ API responds at `https://api.pattikadai.com`  
+✅ API responds at `https://menhaapi.smartseyali.app`  
 ✅ SSL certificates are valid (green lock in browser)  
 ✅ Database connectivity working  
 ✅ CORS headers allowing frontend domain  

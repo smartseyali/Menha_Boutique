@@ -61,10 +61,10 @@ npm run dev
 
 - **Backend**: `backend/.env`
   - Database: 159.89.163.255:5432/pattikadai
-  - Server: http://localhost:5000 (local) or https://api.pattikadai.com (production)
+  - Server: http://localhost:5000 (local) or https://menhaapi.smartseyali.app (production)
 
 - **Frontend**: `.env.local`
-  - API URL: http://localhost:5000 (local) or https://api.pattikadai.com (production)
+  - API URL: http://localhost:5000 (local) or https://menhaapi.smartseyali.app (production)
 
 ## Troubleshooting
 

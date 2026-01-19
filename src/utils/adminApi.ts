@@ -1,7 +1,7 @@
 // Admin API service utility for backend communication
 import { authStorage } from './authStorage';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pattikadai.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://menhaapi.smartseyali.app';
 
 // Get auth token from sessionStorage (secure storage)
 const getAuthToken = (): string | null => {

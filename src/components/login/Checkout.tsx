@@ -571,7 +571,7 @@ const Checkout = () => {
             
             if (!isAuthenticated) {
                 // Register the user
-                const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pattikadai.com';
+                const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://menhaapi.smartseyali.app';
                 
                 const registerPayload = {
                     email: values.email,
@@ -763,7 +763,7 @@ const Checkout = () => {
     const handleLoginBtn = async (values: userValues, formikHelpers: FormikHelpers<userValues>) => {
         formikHelpers.setSubmitting(true);
         try {
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pattikadai.com';
+            const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://menhaapi.smartseyali.app';
             
             const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',

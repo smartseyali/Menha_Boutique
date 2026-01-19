@@ -34,11 +34,11 @@ Run these to verify the migration:
 ```bash
 # Verify .env.local
 cat .env.local | grep NEXT_PUBLIC_API_BASE_URL
-# Expected: http://localhost:5000 and https://api.pattikadai.com (commented)
+# Expected: http://localhost:5000 and https://menhaapi.smartseyali.app (commented)
 
 # Verify .env.production
 cat .env.production | grep -E "(DOMAIN|API_BASE_URL)"
-# Expected: pattikadai.com and https://api.pattikadai.com
+# Expected: pattikadai.com and https://menhaapi.smartseyali.app
 
 # Verify backend/.env
 cat backend/.env | grep -E "(DB_NAME|CORS_ORIGIN)"
@@ -81,7 +81,7 @@ grep -r "thandattifoods.com" --exclude="*.conf" --exclude="*.md"
 
 2. **DNS**
    - [ ] Configure A records for `pattikadai.com` and `www.pattikadai.com`
-   - [ ] Configure CNAME for `api.pattikadai.com`
+   - [ ] Configure CNAME for `menhaapi.smartseyali.app`
    - [ ] Wait for DNS propagation
 
 3. **SSL**
@@ -94,7 +94,7 @@ grep -r "thandattifoods.com" --exclude="*.conf" --exclude="*.md"
    - [ ] Add payment gateway credentials if not already set
 
 5. **Testing**
-   - [ ] Test API endpoint: `https://api.pattikadai.com/health`
+   - [ ] Test API endpoint: `https://menhaapi.smartseyali.app/health`
    - [ ] Test frontend loading: `https://pattikadai.com`
    - [ ] Verify CORS headers
    - [ ] Test product image loading

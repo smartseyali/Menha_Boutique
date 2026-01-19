@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 const BASE_URL = process.env.NEXT_PUBLIC_DOMAIN || 'https://pattikadai.com'
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.pattikadai.com'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://menhaapi.smartseyali.app'
 
 async function getProducts() {
   try {

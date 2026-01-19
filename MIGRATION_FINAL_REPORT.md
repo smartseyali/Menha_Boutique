@@ -135,7 +135,7 @@ Status: Ready to start
 ### URL Configuration
 ```
 Frontend: https://pattikadai.com (configured)
-API: https://api.pattikadai.com (configured)
+API: https://menhaapi.smartseyali.app (configured)
 Database: pattikadai (migrated)
 ```
 
@@ -258,7 +258,7 @@ Use this checklist to verify everything is working:
 
 ```
 Frontend:       https://pattikadai.com
-API Endpoint:   https://api.pattikadai.com
+API Endpoint:   https://menhaapi.smartseyali.app
 Admin Panel:    https://pattikadai.com/admin
 Database:       pattikadai (on 159.89.163.255:5432)
 ```
