@@ -127,73 +127,85 @@ const Login = () => {
     return (
         <section className="section-login padding-tb-50">
             <div className="container">
-                <Row className="justify-content-center">
-                    <Col sm={12} md={8} lg={6}>
-                        <Fade triggerOnce direction='up' duration={1000} delay={200} className="section-title bb-center">
-                            <div className="section-detail text-center mb-4">
-                                <h2 className="bb-title">Admin <span>Login</span></h2>
-                                <p>Menha Boutique Administration</p>
+                <Row className="justify-content-center align-items-center min-vh-100" style={{ minHeight: '80vh' }}>
+                    <Col sm={12} md={8} lg={5}>
+                        <Fade triggerOnce direction='up' duration={1000} delay={200}>
+                            <div className="text-center mb-4">
+                                <h2 className="bb-title fw-bold">Admin <span className="text-primary">Login</span></h2>
+                                <p className="text-muted">Menha Boutique Administration</p>
                             </div>
-                        </Fade>
-                    </Col>
-                    <Col sm={12} md={8} lg={6}>
-                        <Fade triggerOnce direction='up' duration={1000} delay={200} className="bb-login-contact">
-                            <div className="card shadow-sm border-0 p-4">
-                            <Formik
-                                validationSchema={schema}
-                                onSubmit={handleLoginBtn}
-                                initialValues={initialValues}>{({
-                                    handleSubmit,
-                                    handleChange,
-                                    values,
-                                    errors,
-                                }: FormikProps<FormValues>) => {
-                                    return (
-                                        <Form noValidate onSubmit={handleSubmit}>
-                                            <div className="bb-login-wrap mb-3">
-                                                <label htmlFor="identifier" className="form-label">Phone Number or Email*</label>
-                                                <Form.Group>
-                                                    <InputGroup>
-                                                        <Form.Control 
-                                                            onChange={handleChange} 
-                                                            value={values.identifier || ""} 
-                                                            type="text" 
-                                                            id="identifier" 
-                                                            name="identifier" 
-                                                            placeholder="Enter Your Phone Number or Email" 
-                                                            required 
-                                                            isInvalid={!!errors.identifier} 
-                                                        />
-                                                        <Form.Control.Feedback type="invalid">
-                                                            {errors.identifier}
-                                                        </Form.Control.Feedback>
-                                                    </InputGroup>
-                                                </Form.Group>
-                                            </div>
-                                            <div className="bb-login-wrap mb-3">
-                                                <label htmlFor="password">Password*</label>
-                                                <Form.Group>
-                                                    <InputGroup>
-                                                        <Form.Control onChange={handleChange} value={values.password || ""} type="password" id="password" name="password" placeholder="Enter Your Password" isInvalid={!!errors.password} />
-                                                        <Form.Control.Feedback type="invalid">
-                                                            {errors.password}
-                                                        </Form.Control.Feedback>
-                                                    </InputGroup>
-                                                </Form.Group>
-                                            </div>
-                                            <div className="bb-login-wrap mb-4 text-end">
-                                                <a onClick={(e) => e.preventDefault()} href="#" className="text-decoration-none">Forgot Password?</a>
-                                            </div>
-                                            <div className="bb-login-button d-grid gap-2">
-                                                <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-                                                    {isSubmitting ? 'Logging in...' : 'Login'}
-                                                </button>
-                                                {/* <Link to="/register" className="btn btn-outline-secondary">Register New Admin</Link> */}
-                                            </div>
-                                        </Form>
-                                    )
-                                }}
-                            </Formik>
+                            
+                            <div className="card shadow border-0 p-4 p-md-5">
+                                <Formik
+                                    validationSchema={schema}
+                                    onSubmit={handleLoginBtn}
+                                    initialValues={initialValues}>{({
+                                        handleSubmit,
+                                        handleChange,
+                                        values,
+                                        errors,
+                                    }: FormikProps<FormValues>) => {
+                                        return (
+                                            <Form noValidate onSubmit={handleSubmit}>
+                                                <div className="bb-login-wrap mb-3">
+                                                    <label htmlFor="identifier" className="form-label fw-medium">Phone Number or Email</label>
+                                                    <Form.Group>
+                                                        <InputGroup>
+                                                            <span className="input-group-text bg-light border-end-0">
+                                                                <i className="ri-user-line text-muted"></i>
+                                                            </span>
+                                                            <Form.Control 
+                                                                className="border-start-0 ps-0"
+                                                                onChange={handleChange} 
+                                                                value={values.identifier || ""} 
+                                                                type="text" 
+                                                                id="identifier" 
+                                                                name="identifier" 
+                                                                placeholder="Enter Your Phone Number or Email" 
+                                                                required 
+                                                                isInvalid={!!errors.identifier} 
+                                                            />
+                                                            <Form.Control.Feedback type="invalid">
+                                                                {errors.identifier}
+                                                            </Form.Control.Feedback>
+                                                        </InputGroup>
+                                                    </Form.Group>
+                                                </div>
+                                                <div className="bb-login-wrap mb-3">
+                                                    <label htmlFor="password" className="form-label fw-medium">Password</label>
+                                                    <Form.Group>
+                                                        <InputGroup>
+                                                            <span className="input-group-text bg-light border-end-0">
+                                                                <i className="ri-lock-line text-muted"></i>
+                                                            </span>
+                                                            <Form.Control 
+                                                                className="border-start-0 ps-0"
+                                                                onChange={handleChange} 
+                                                                value={values.password || ""} 
+                                                                type="password" 
+                                                                id="password" 
+                                                                name="password" 
+                                                                placeholder="Enter Your Password" 
+                                                                isInvalid={!!errors.password} 
+                                                            />
+                                                            <Form.Control.Feedback type="invalid">
+                                                                {errors.password}
+                                                            </Form.Control.Feedback>
+                                                        </InputGroup>
+                                                    </Form.Group>
+                                                </div>
+                                                <div className="bb-login-wrap mb-4 text-end">
+                                                    <a onClick={(e) => e.preventDefault()} href="#" className="text-decoration-none small">Forgot Password?</a>
+                                                </div>
+                                                <div className="bb-login-button d-grid gap-2">
+                                                    <button className="btn btn-primary py-2 fw-medium" type="submit" disabled={isSubmitting}>
+                                                        {isSubmitting ? 'Logging in...' : 'Login'}
+                                                    </button>
+                                                </div>
+                                            </Form>
+                                        )
+                                    }}
+                                </Formik>
                             </div>
                         </Fade>
                     </Col>

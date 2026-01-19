@@ -75,7 +75,7 @@ const staticOptions = {
 };
 
 const fs = require('fs');
-const publicAssetsPath = path.join(__dirname, '../public/assets');
+const publicAssetsPath = path.join(__dirname, 'public/assets');
 const defaultImagePath = path.join(publicAssetsPath, 'img/product/default.jpg');
 
 // Custom middleware to handle product images - serves files directly to handle URL encoding properly

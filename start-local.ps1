@@ -49,14 +49,14 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd backend; npm r
 Start-Sleep -Seconds 3
 
 # Start frontend server
-Write-Host "Starting frontend UI server..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run dev" -WindowStyle Normal
+Write-Host "Starting Admin Panel server..." -ForegroundColor Yellow
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd admin; npm run dev" -WindowStyle Normal
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "Servers are starting..." -ForegroundColor Green
 Write-Host "Backend API: http://localhost:5000" -ForegroundColor Cyan
-Write-Host "Frontend UI: http://localhost:3000" -ForegroundColor Cyan
+Write-Host "Admin Panel: http://localhost:5173" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Press any key to exit this script (servers will continue running in separate windows)..." -ForegroundColor Yellow
