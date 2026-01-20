@@ -1,0 +1,518 @@
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ImageBackground, StatusBar, ScrollView } from 'react-native';
+import api, { setAuthToken } from '../services/api';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+
+const SignupScreen = ({ route }: any) => {
+  const { setIsAuthenticated } = route.params || {};
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  
+  // Address State
+  const [address, setAddress] = useState('');
+  const [postCode, setPostCode] = useState('');
+  
+  // Location Selections (Object with id and name)
+  const [selectedCountry, setSelectedCountry] = useState<any>(null);
+  const [selectedState, setSelectedState] = useState<any>(null);
+  const [selectedCity, setSelectedCity] = useState<any>(null);
+
+  // Data Lists
+  const [countries, setCountries] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+
+  // Modal State
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectionType, setSelectionType] = useState<'country' | 'state' | 'city' | null>(null);
+
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation<any>();
+
+  // Fetch Countries on Mount
+  React.useEffect(() => {
+      fetchCountries();
+  }, []);
+
+  const fetchCountries = async () => {
+      try {
+          const response = await api.get('/locations/countries'); // Note: Endpoint confirmed from locationController
+          // If the backend returns { countries: [...] }
+          setCountries(response.data.countries || []);
+          
+          // Pre-select India if available and not selected
+          const india = (response.data.countries || []).find((c: any) => c.name === 'India');
+          if (india) {
+              handleSelect(india, 'country');
+          }
+      } catch (error) {
+          console.log('Error fetching countries', error);
+      }
+  };
+
+  const fetchStates = async (countryId: any) => {
+      try {
+          const response = await api.get(`/locations/states?countryId=${countryId}`);
+          setStates(response.data.states || []);
+      } catch (error) {
+          console.log('Error fetching states', error);
+      }
+  };
+
+  const fetchCities = async (stateId: any) => {
+      try {
+          const response = await api.get(`/locations/cities?stateId=${stateId}`);
+          setCities(response.data.cities || []);
+      } catch (error) {
+          console.log('Error fetching cities', error);
+      }
+  };
+
+  const openModal = (type: 'country' | 'state' | 'city') => {
+      if (type === 'state' && !selectedCountry) {
+          Alert.alert('Notice', 'Please select a country first');
+          return;
+      }
+      if (type === 'city' && !selectedState) {
+          Alert.alert('Notice', 'Please select a state first');
+          return;
+      }
+      setSelectionType(type);
+      setModalVisible(true);
+  };
+
+  const handleSelect = (item: any, type: string) => {
+      if (type === 'country') {
+          setSelectedCountry(item);
+          setSelectedState(null);
+          setSelectedCity(null);
+          setStates([]);
+          setCities([]);
+          fetchStates(item.id);
+      } else if (type === 'state') {
+          setSelectedState(item);
+          setSelectedCity(null);
+          setCities([]);
+          fetchCities(item.id);
+      } else if (type === 'city') {
+          setSelectedCity(item);
+      }
+      setModalVisible(false);
+      setSelectionType(null);
+  };
+
+  const handleSignup = async () => {
+    if (!name || (!email && !phoneNumber) || !password) {
+      Alert.alert('Error', 'Please fill in required basic fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const nameParts = name.trim().split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const payload = {
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        password,
+        address,
+        postCode,
+        // Send Names as expected by backend
+        country: selectedCountry?.name || '',
+        state: selectedState?.name || '',
+        city: selectedCity?.name || ''
+      };
+      
+      const response = await api.post('/auth/register', payload);
+      const { token, user } = response.data;
+
+      if (token) {
+          setAuthToken(token);
+          await AsyncStorage.setItem('auth_token', token);
+          
+          if (setIsAuthenticated) {
+            setIsAuthenticated(true);
+          }
+          
+          Alert.alert('Success', 'Account created successfully!', [
+              { text: 'OK', onPress: () => navigation.navigate('MainTabs') }
+          ]);
+      } else {
+           Alert.alert('Success', 'Account created! Please login.', [
+               { text: 'OK', onPress: () => navigation.navigate('Login') }
+           ]);
+      }
+
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Signup Failed', error.response?.data?.message || 'Could not create account');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+    // Render Modal Item
+    const renderModalItem = ({ item }: any) => (
+        <TouchableOpacity style={styles.modalItem} onPress={() => handleSelect(item, selectionType!)}>
+            <Text style={styles.modalItemText}>{item.name}</Text>
+            {(selectionType === 'country' && selectedCountry?.id === item.id) ||
+             (selectionType === 'state' && selectedState?.id === item.id) ||
+             (selectionType === 'city' && selectedCity?.id === item.id) ? (
+                <Ionicons name="checkmark" size={20} color="#f59e0b" />
+            ) : null}
+        </TouchableOpacity>
+    );
+
+    const getListData = () => {
+        if (selectionType === 'country') return countries;
+        if (selectionType === 'state') return states;
+        if (selectionType === 'city') return cities;
+        return [];
+    };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <ImageBackground 
+        source={{ uri: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80' }} 
+        style={styles.backgroundImage}
+      >
+        <LinearGradient
+            colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
+            style={styles.overlay}
+        >
+            <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
+                <Text style={styles.title}>Create Account</Text>
+                <Text style={styles.subtitle}>Join Menha Boutique</Text>
+
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Full Name"
+                        placeholderTextColor="#999"
+                        value={name}
+                        onChangeText={setName}
+                    />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email Address"
+                        placeholderTextColor="#999"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                    />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="call-outline" size={20} color="#666" style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Phone Number"
+                        placeholderTextColor="#999"
+                        value={phoneNumber}
+                        onChangeText={setPhoneNumber}
+                        keyboardType="phone-pad"
+                    />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Password"
+                        placeholderTextColor="#999"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                    />
+                </View>
+
+                {/* Address Section */}
+                <Text style={styles.sectionHeader}>Address Details</Text>
+                
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="location-outline" size={20} color="#666" style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Address Line"
+                        placeholderTextColor="#999"
+                        value={address}
+                        onChangeText={setAddress}
+                    />
+                </View>
+
+                <View style={styles.row}>
+                    <TouchableOpacity 
+                        style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]} 
+                        onPress={() => openModal('country')}
+                    >
+                         <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedCountry && { color: '#999' }]}>
+                             {selectedCountry ? selectedCountry.name : "Country"}
+                         </Text>
+                         <Ionicons name="chevron-down" size={16} color="#999" />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                        style={[styles.inputWrapper, { flex: 1 }]}
+                        onPress={() => openModal('state')}
+                    >
+                         <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedState && { color: '#999' }]}>
+                             {selectedState ? selectedState.name : "State"}
+                         </Text>
+                         <Ionicons name="chevron-down" size={16} color="#999" />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.row}>
+                    <TouchableOpacity 
+                        style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
+                        onPress={() => openModal('city')}
+                    >
+                         <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedCity && { color: '#999' }]}>
+                             {selectedCity ? selectedCity.name : "City"}
+                         </Text>
+                         <Ionicons name="chevron-down" size={16} color="#999" />
+                    </TouchableOpacity>
+
+                    <View style={[styles.inputWrapper, { flex: 1 }]}>
+                         <TextInput
+                            style={styles.input}
+                            placeholder="Pincode"
+                            placeholderTextColor="#999"
+                            value={postCode}
+                            onChangeText={setPostCode}
+                            keyboardType="number-pad"
+                        />
+                    </View>
+                </View>
+
+                <TouchableOpacity 
+                    onPress={handleSignup} 
+                    disabled={loading}
+                    style={styles.signupBtnContainer}
+                >
+                    <LinearGradient
+                        colors={['#f59e0b', '#f97316']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.button}
+                    >
+                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign Up</Text>}
+                    </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
+                    <Text style={styles.linkText}>Already have an account? <Text style={styles.linkHighlight}>Login</Text></Text>
+                </TouchableOpacity>
+            </ScrollView>
+
+            {/* Selection Modal */}
+            {modalVisible && (
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Select {selectionType ? selectionType.charAt(0).toUpperCase() + selectionType.slice(1) : ''}</Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
+                                <Ionicons name="close" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+                        {getListData().length === 0 ? (
+                            <View style={styles.emptyState}>
+                                <ActivityIndicator size="small" color="#f59e0b" />
+                                <Text style={styles.emptyText}>Loading...</Text>
+                            </View>
+                        ) : (
+                            <React.Fragment> {/* Use ScrollView or FlatList from React Native directly imported if not available, assumes FlatList available */}
+                                {/* Using Map for inline simplicity if FlatList import issue, but FlatList is standard */}
+                                {/* I'll assume FlatList is not imported and use ScrollView with map for safety in this edit block or I need to import FlatList */}
+                                {/* Wait, I can't add imports easily with replace_file_content if I don't target top. */}
+                                {/* I will rely on ScrollView for now as lists might not be huge, or target top to add FlatList */}
+                                {/* Actually I will just replace the whole component so I can manage imports? */}
+                                {/* No, replace_file_content is partial. */}
+                                {/* I will use ScrollView. */}
+                                <ScrollView style={{ maxHeight: 300 }}>
+                                    {getListData().map((item) => (
+                                        <View key={item.id}>
+                                            {renderModalItem({ item })}
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            </React.Fragment>
+                        )}
+                    </View>
+                </View>
+            )}
+
+        </LinearGradient>
+      </ImageBackground>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  backgroundImage: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  overlay: {
+    flex: 1,
+    padding: 20,
+  },
+  formContainer: {
+      flexGrow: 1,
+      justifyContent: 'flex-end',
+      paddingBottom: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#eee',
+    marginBottom: 30,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  inputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      marginBottom: 15,
+      paddingHorizontal: 15,
+      height: 55,
+  },
+  inputIcon: {
+      marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    color: '#333',
+    fontSize: 16,
+  },
+  signupBtnContainer: {
+      marginTop: 20,
+      shadowColor: '#f97316',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 5,
+  },
+  button: {
+    height: 55,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  linkButton: {
+    marginTop: 25,
+    alignItems: 'center',
+  },
+  linkText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  linkHighlight: {
+      fontWeight: 'bold',
+      color: '#f59e0b',
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 15,
+    marginBottom: 10,
+    marginLeft: 5,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 100,
+  },
+  modalContainer: {
+      width: '85%',
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 20,
+      maxHeight: '70%',
+  },
+  modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: '#eee',
+      paddingBottom: 10,
+  },
+  modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#333',
+  },
+  closeBtn: {
+      padding: 5,
+  },
+  modalItem: {
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#f9f9f9',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+  },
+  modalItemText: {
+      fontSize: 16,
+      color: '#333',
+  },
+  emptyState: {
+      padding: 20,
+      alignItems: 'center',
+  },
+  emptyText: {
+      marginTop: 10,
+      color: '#666',
+  }
+});
+
+export default SignupScreen;

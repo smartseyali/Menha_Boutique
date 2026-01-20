@@ -4,13 +4,7 @@ import { Platform } from 'react-native';
 
 // Determine API URL based on platform
 const getBaseUrl = () => {
-    if (Platform.OS === 'android') {
-        return 'http://10.0.2.2:5000/api'; // Android Emulator
-    } else if (Platform.OS === 'web') {
-        return 'http://localhost:5000/api'; // Web Browser
-    } else {
-        return 'http://localhost:5000/api'; // iOS Simulator
-    }
+    return 'https://menhaapi.smartseyali.app/api';
 };
 
 const API_URL = getBaseUrl();

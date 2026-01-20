@@ -78,55 +78,68 @@ const fs = require('fs');
 const publicAssetsPath = path.join(__dirname, 'public/assets');
 const defaultImagePath = path.join(publicAssetsPath, 'img/product/default.jpg');
 
-// Custom middleware to handle product images - serves files directly to handle URL encoding properly
 app.use((req, res, next) => {
   // Only handle GET requests for product images
   if (req.method === 'GET' && req.path.startsWith('/assets/img/product/')) {
-    const imageMatch = req.path.match(/^\/assets\/img\/product\/(.+)$/);
-    if (imageMatch && /\.(jpg|jpeg|png|gif|webp)$/i.test(imageMatch[1])) {
-      try {
-        // Decode URL-encoded filename
-        const filename = decodeURIComponent(imageMatch[1]);
-        const requestedPath = path.join(publicAssetsPath, 'img/product', filename);
-        
-        // Determine content type based on file extension
-        const getContentType = (filePath) => {
-          const ext = path.extname(filePath).toLowerCase();
-          if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
-          if (ext === '.png') return 'image/png';
-          if (ext === '.gif') return 'image/gif';
-          if (ext === '.webp') return 'image/webp';
-          return 'application/octet-stream';
+    // Decode path to handle spaces and special chars
+    let decodedPath;
+    try {
+      decodedPath = decodeURIComponent(req.path);
+    } catch (e) {
+      decodedPath = req.path;
+    }
+
+    const imageMatch = decodedPath.match(/^\/assets\/img\/product\/(.+)$/);
+    // Allow more extensions including jpg, jpeg, png, gif, webp, svg, heic
+    if (imageMatch && /\.(jpg|jpeg|png|gif|webp|svg|heic)$/i.test(imageMatch[1])) {
+      const filename = imageMatch[1];
+      // Use standard path join for cross-platform compatibility
+      const requestedPath = path.join(publicAssetsPath, 'img', 'product', filename);
+      
+      // Define content type helper
+      const getContentType = (filePath) => {
+        const ext = path.extname(filePath).toLowerCase();
+        const types = {
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.png': 'image/png',
+          '.gif': 'image/gif',
+          '.webp': 'image/webp',
+          '.svg': 'image/svg+xml',
+          '.heic': 'image/heic'
         };
-        
-        // Check if requested file exists
+        return types[ext] || 'application/octet-stream';
+      };
+
+      // Set common headers
+      const setHeaders = (filePath) => {
+        res.setHeader('Content-Type', getContentType(filePath));
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+      };
+
+      try {
         if (fs.existsSync(requestedPath) && fs.statSync(requestedPath).isFile()) {
-          // File exists, serve it directly with proper headers
-          res.setHeader('Content-Type', getContentType(requestedPath));
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-          return res.sendFile(requestedPath);
+           setHeaders(requestedPath);
+           return res.sendFile(requestedPath);
         } else {
-          // File doesn't exist, serve default image
-          if (fs.existsSync(defaultImagePath)) {
-            res.setHeader('Content-Type', 'image/jpeg');
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Cache-Control', 'public, max-age=3600');
-            return res.sendFile(defaultImagePath);
-          }
+           console.log(`Image not found: ${filename}, serving default`);
+           if (fs.existsSync(defaultImagePath)) {
+             setHeaders(defaultImagePath);
+             return res.sendFile(defaultImagePath);
+           } else {
+             console.error('Default image also missing!');
+           }
         }
-      } catch (error) {
-        console.error('Error serving product image:', error);
-        // On error, try to serve default image
+      } catch (err) {
+        console.error('Error serving image:', err);
         if (fs.existsSync(defaultImagePath)) {
-          res.setHeader('Content-Type', 'image/jpeg');
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          return res.sendFile(defaultImagePath);
+           setHeaders(defaultImagePath);
+           return res.sendFile(defaultImagePath);
         }
       }
     }
   }
-  // Not a product image request, continue to next middleware
   next();
 });
 

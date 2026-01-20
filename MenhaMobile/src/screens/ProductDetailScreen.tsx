@@ -1,53 +1,74 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, StatusBar, SafeAreaView, Platform } from 'react-native';
 import api from '../services/api';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
+
+import { resolveImageUrl } from '../utils/imageUtils';
+
+import { useCart } from '../context/CartContext';
 
 const ProductDetailScreen = () => {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
-  const { productId } = route.params;
+  const { productId } = route.params || {}; // Safety check
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [isWishlist, setIsWishlist] = useState(false);
+
+  const { updateCartCount } = useCart();
 
   useEffect(() => {
-    fetchProductDetails();
+    if (productId) {
+        fetchProductDetails();
+    }
   }, [productId]);
-
+  
   const fetchProductDetails = async () => {
     try {
       const response = await api.get(`/products/${productId}`);
       setProduct(response.data.product || response.data);
     } catch (error) {
-    //   console.error(error);
-    //   Alert.alert('Error', 'Could not load product details');
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   const addToCart = async (goToCart = false) => {
+    // Check Authentication First
+    const token = await AsyncStorage.getItem('auth_token');
+    console.log('Add to cart token check:', token, typeof token); 
+
+    if (!token || token === 'null' || token === 'undefined') {
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm('Login Required\n\nPlease login to add items to your cart.');
+            if (confirmed) {
+                navigation.navigate('Login');
+            }
+        } else {
+            Alert.alert(
+                'Login Required',
+                'Please login to add items to your cart.',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Login', onPress: () => navigation.navigate('Login') }
+                ]
+            );
+        }
+        return;
+    }
+
     setAdding(true);
     try {
-        // Here we ideally call API. For now, we will store in AsyncStorage or just Simulate
-        // const res = await api.post('/cart', { product_id: product.id, quantity });
-        
-        // Simulating cart logic with AsyncStorage for Demo if offline or simple
-        const currentCart = await AsyncStorage.getItem('cart');
-        let cart = currentCart ? JSON.parse(currentCart) : [];
-        const existingIndex = cart.findIndex((item: any) => item.id === product.id);
-        
-        if (existingIndex > -1) {
-            cart[existingIndex].quantity += quantity;
-        } else {
-            cart.push({ ...product, quantity });
-        }
-        await AsyncStorage.setItem('cart', JSON.stringify(cart));
+        await api.post('/cart/add', { productId: product.id, quantity });
+        await updateCartCount(); // Update badge
 
         if (goToCart) {
             navigation.navigate('Cart');
@@ -55,71 +76,170 @@ const ProductDetailScreen = () => {
             Alert.alert('Success', 'Added to cart!');
         }
 
-    } catch (error) {
-      Alert.alert('Error', 'Failed to add to cart');
+    } catch (error: any) {
+        console.error('Add to cart error:', error);
+        if (error.response && error.response.status === 401) {
+            // Token invalid or expired
+            await AsyncStorage.removeItem('auth_token'); // Clear invalid token
+            Alert.alert(
+                'Session Expired',
+                'Your session has expired. Please login again.',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Login', onPress: () => navigation.navigate('Login') }
+                ]
+            );
+        } else {
+            Alert.alert('Error', 'Failed to add to cart: ' + (error.response?.data?.message || error.message));
+        }
     } finally {
         setAdding(false);
     }
   };
 
+  const toggleWishlist = async () => {
+      try {
+          const token = await AsyncStorage.getItem('auth_token');
+          if (!token) {
+              Alert.alert('Login Required', 'Please login to add to wishlist', [
+                  { text: 'Cancel', style: 'cancel'},
+                  { text: 'Login', onPress: () => navigation.navigate('Login') }
+              ]);
+              return;
+          }
+
+          // API Call
+          await api.post('/wishlist/add', { productId: product.id });
+          setIsWishlist(!isWishlist); // Optimistic update
+          Alert.alert('Success', isWishlist ? 'Removed from wishlist' : 'Added to wishlist');
+      } catch (error) {
+          Alert.alert('Error', 'Could not update wishlist');
+      }
+  };
+
   const increment = () => setQuantity(prev => prev + 1);
   const decrement = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
-
-  if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color="#E53935"/></View>;
-  }
 
   if (!product) {
     return <View style={styles.center}><Text>Product not found</Text></View>;
   }
 
-  const imageUrl = product.image || (product.images && product.images[0]?.url) || 'https://via.placeholder.com/300';
-  const discount = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
+  // Handle Image Resolution
+  const rawImageUrl = 
+    product.primary_image || 
+    product.primaryImage || 
+    (product.images && product.images.length > 0 ? (product.images[0].image_url || product.images[0].imageUrl || product.images[0].url) : null) || 
+    product.image;
+
+  const imageUrl = resolveImageUrl(rawImageUrl);
+
+  const displayPrice = product.new_price || product.newPrice || product.price;
+  const displayOldPrice = product.old_price || product.oldPrice;
+
+  const discount = displayOldPrice ? Math.round(((displayOldPrice - displayPrice) / displayOldPrice) * 100) : 0;
+  const rating = product.rating || 4.8;
+  const reviewCount = product.reviews ? product.reviews.length : (product.reviewCount || 120);
 
   return (
-    <View style={styles.container}>
-      <ScrollView>
-        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header Icons Overlay */}
+        <View style={styles.headerOverlay}>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
+                <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+            <View style={{flexDirection: 'row'}}>
+                <TouchableOpacity style={[styles.iconBtn, { marginRight: 10 }]} onPress={toggleWishlist}>
+                    <Ionicons name={isWishlist ? "heart" : "heart-outline"} size={24} color={isWishlist ? "#E53935" : "#333"} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
+                    <Ionicons name="cart-outline" size={24} color="#333" />
+                </TouchableOpacity>
+            </View>
+        </View>
+
+        <View style={styles.imageWrapper}>
+             <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
+             {discount > 0 && (
+                 <View style={styles.discountBadge}>
+                     <Text style={styles.discountText}>{discount}% OFF</Text>
+                 </View>
+             )}
+        </View>
         
         <View style={styles.content}>
-          <Text style={styles.title}>{product.name}</Text>
-          <View style={styles.ratingRow}>
-              <Text style={styles.rating}>★ {product.rating || 4.8}</Text>
-              <Text style={styles.reviews}>({product.reviews || 120} reviews)</Text>
+          <Text style={styles.category}>{product.category?.name || product.category_name || 'Snacks & Sweets'}</Text>
+          <Text style={styles.title}>{product.name || product.title}</Text>
+          
+          <View style={styles.metaRow}>
+              <View style={styles.ratingBox}>
+                  <Text style={styles.ratingText}>{rating} ★</Text>
+                  <Text style={styles.reviewText}> | {reviewCount} reviews</Text>
+              </View>
+              
+              <View style={styles.stockStatus}>
+                  <Text style={styles.inStock}>In Stock</Text>
+              </View>
           </View>
           
           <View style={styles.priceContainer}>
-              <Text style={styles.price}>₹{product.price}</Text>
-              {product.oldPrice && <Text style={styles.oldPrice}>₹{product.oldPrice}</Text>}
-              {discount > 0 && <Text style={styles.discount}>{discount}% OFF</Text>}
+              <Text style={styles.price}>₹{displayPrice}</Text>
+              {displayOldPrice && <Text style={styles.oldPrice}>₹{displayOldPrice}</Text>}
+              <Text style={styles.taxText}>(Incl. of all taxes)</Text>
           </View>
 
+          <View style={styles.divider} />
+
           {/* Quantity Selector */}
-          <View style={styles.quantityContainer}>
+          <View style={styles.quantitySection}>
               <Text style={styles.sectionTitle}>Quantity</Text>
               <View style={styles.counter}>
-                  <TouchableOpacity onPress={decrement} style={styles.counterBtn}><Text style={styles.counterText}>-</Text></TouchableOpacity>
-                  <Text style={styles.quantityText}>{quantity}</Text>
-                  <TouchableOpacity onPress={increment} style={styles.counterBtn}><Text style={styles.counterText}>+</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={decrement} style={styles.counterBtn}>
+                      <Ionicons name="remove" size={20} color="#333" />
+                  </TouchableOpacity>
+                  <Text style={styles.quantityValue}>{quantity}</Text>
+                  <TouchableOpacity onPress={increment} style={styles.counterBtn}>
+                      <Ionicons name="add" size={20} color="#333" />
+                  </TouchableOpacity>
               </View>
           </View>
 
           <View style={styles.divider} />
 
-          <Text style={styles.descriptionHead}>Description</Text>
-          <Text style={styles.description}>{product.description || 'No description available for this product.'}</Text>
+          <Text style={styles.descriptionHead}>Product Description</Text>
+          <Text style={styles.description}>{product.description || 'Experience the authentic taste of tradition with our premium quality products made from natural ingredients.'}</Text>
+          
+           {/* Additional Info / Delivery Placeholder */}
+           <View style={styles.deliveryInfo}>
+               <Ionicons name="cube-outline" size={20} color="#666" style={{marginRight:8}} />
+               <Text style={styles.deliveryText}>Standard Delivery: 2-3 Days</Text>
+           </View>
         </View>
       </ScrollView>
 
+      {/* Bottom Action Bar */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.cartButton} onPress={() => addToCart(false)} disabled={adding}>
-          <Text style={[styles.btnText, {color: '#E53935'}]}>Add to Cart</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buyButton} onPress={() => addToCart(true)} disabled={adding}>
-          <Text style={[styles.btnText, {color: '#fff'}]}>Buy Now</Text>
-        </TouchableOpacity>
+        <View style={styles.footerBtnContainer}>
+            <TouchableOpacity style={styles.addToCartBtn} onPress={() => addToCart(false)} disabled={adding}>
+            <Text style={styles.addToCartText}>Add to Cart</Text>
+            </TouchableOpacity>
+        </View>
+        
+        <View style={styles.footerBtnContainer}>
+            <TouchableOpacity onPress={() => addToCart(true)} disabled={adding} style={{flex:1}}>
+                <LinearGradient
+                    colors={['#f59e0b', '#f97316']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buyBtn}
+                >
+                    <Text style={styles.buyBtnText}>Buy Now</Text>
+                </LinearGradient>
+            </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -133,48 +253,112 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  scrollContent: {
+      paddingBottom: 100,
+  },
+  headerOverlay: {
+      position: 'absolute',
+      top: 10,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 15,
+      zIndex: 10,
+  },
+  iconBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(255,255,255,0.9)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      elevation: 2,
+  },
+  imageWrapper: {
+      width: width,
+      height: width, // Square aspect ratio
+      backgroundColor: '#f9f9f9',
+      position: 'relative',
+  },
   image: {
-    width: width,
-    height: 300,
-    backgroundColor: '#f9f9f9',
+    width: '100%',
+    height: '100%',
+  },
+  discountBadge: {
+      position: 'absolute',
+      bottom: 20,
+      left: 20,
+      backgroundColor: '#E53935',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 4,
+  },
+  discountText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 12,
   },
   content: {
     padding: 20,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
+  category: {
+      fontSize: 12,
+      color: '#888',
+      textTransform: 'uppercase',
+      marginBottom: 5,
+      letterSpacing: 1,
   },
-  ratingRow: {
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 10,
+    color: '#1a1a1a',
+    lineHeight: 32,
+  },
+  metaRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       marginBottom: 15,
   },
-  rating: {
-      backgroundColor: 'green',
-      color: '#fff',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4,
-      fontSize: 12,
-      fontWeight: 'bold',
-      marginRight: 8,
+  ratingBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
   },
-  reviews: {
+  ratingText: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#f59e0b',
+  },
+  reviewText: {
       color: '#888',
+      fontSize: 13,
+      marginLeft: 5,
+  },
+  stockStatus: {
+      backgroundColor: '#e6f4ea',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 4,
+  },
+  inStock: {
+      color: '#1e8e3e',
       fontSize: 12,
+      fontWeight: '600',
   },
   priceContainer: {
       flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 20,
+      alignItems: 'baseline',
+      marginBottom: 5,
   },
   price: {
-    fontSize: 24,
-    color: '#333',
-    fontWeight: 'bold',
+    fontSize: 28,
+    color: '#1a472a', // Brand green
+    fontWeight: '700',
     marginRight: 10,
   },
   oldPrice: {
@@ -183,84 +367,123 @@ const styles = StyleSheet.create({
       textDecorationLine: 'line-through',
       marginRight: 10,
   },
-  discount: {
-      color: 'green',
-      fontWeight: 'bold',
-      fontSize: 14,
+  taxText: {
+      fontSize: 12,
+      color: '#999',
   },
-  quantityContainer: {
+  divider: {
+      height: 1,
+      backgroundColor: '#f0f0f0',
+      marginVertical: 20,
+  },
+  quantitySection: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 20,
   },
   sectionTitle: {
       fontSize: 16,
       fontWeight: '600',
+      color: '#333',
   },
   counter: {
       flexDirection: 'row',
       alignItems: 'center',
-      borderWidth: 1,
-      borderColor: '#ccc',
-      borderRadius: 5,
+      backgroundColor: '#f5f5f5',
+      borderRadius: 25,
+      paddingHorizontal: 5,
+      paddingVertical: 5,
   },
   counterBtn: {
-      paddingHorizontal: 15,
-      paddingVertical: 8,
-      backgroundColor: '#f0f0f0',
+      width: 32,
+      height: 32,
+      backgroundColor: '#fff',
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      elevation: 1,
   },
-  counterText: {
-      fontSize: 18,
-      fontWeight: 'bold',
-  },
-  quantityText: {
-      paddingHorizontal: 15,
+  quantityValue: {
       fontSize: 16,
       fontWeight: 'bold',
-  },
-  divider: {
-      height: 1,
-      backgroundColor: '#eee',
-      marginVertical: 15,
+      marginHorizontal: 15,
+      minWidth: 20,
+      textAlign: 'center',
   },
   descriptionHead: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 10,
+    color: '#333',
   },
   description: {
     fontSize: 14,
-    color: '#555',
-    lineHeight: 22,
+    color: '#666',
+    lineHeight: 24,
+  },
+  deliveryInfo: {
+      marginTop: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#f9f9f9',
+      padding: 10,
+      borderRadius: 8,
+  },
+  deliveryText: {
+      color: '#666',
+      fontSize: 13,
   },
   footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    padding: 10,
+    padding: 15,
     backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    elevation: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
-  cartButton: {
+  footerBtnContainer: {
+      flex: 1,
+      paddingHorizontal: 5,
+  },
+  addToCartBtn: {
     flex: 1,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#E53935',
-    padding: 15,
-    borderRadius: 5,
+    borderColor: '#e2e2e2',
+    paddingVertical: 12,
+    borderRadius: 30,
     alignItems: 'center',
-    marginRight: 10,
+    justifyContent: 'center',
   },
-  buyButton: {
+  addToCartText: {
+    fontWeight: '700',
+    fontSize: 14,
+    color: '#333',
+  },
+  buyBtn: {
     flex: 1,
-    backgroundColor: '#E53935',
-    padding: 15,
-    borderRadius: 5,
+    paddingVertical: 13, // border slightly accounts for difference
+    borderRadius: 30,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  btnText: {
-    fontWeight: 'bold',
-    fontSize: 16,
+  buyBtnText: {
+    fontWeight: '700',
+    fontSize: 14,
+    color: '#fff',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
 

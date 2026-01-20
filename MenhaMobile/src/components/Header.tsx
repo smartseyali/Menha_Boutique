@@ -1,78 +1,130 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Platform, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useCart } from '../context/CartContext';
+
 const Header = () => {
   const navigation = useNavigation<any>();
+  const { cartCount } = useCart();
 
   return (
-    <View style={styles.container}>
-      {/* Top Row: Brand & Icons */}
-      <View style={styles.topRow}>
-        <Text style={styles.brand}>Menha Boutique</Text>
-        <View style={styles.iconsRow}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Wishlist')}>
-               <Ionicons name="heart-outline" size={24} color="#333" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Cart')}>
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>0</Text>
-              </View>
-              <Ionicons name="cart-outline" size={24} color="#333" />
-            </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
-        <TextInput 
-          style={styles.input} 
-          placeholder="Search for products..." 
-          placeholderTextColor="#888"
-        />
+      {/* Announcement Bar */}
+      <View style={styles.announcementBar}>
+        <Text style={styles.announcementText}>World Wide Shipping Available on Request!</Text>
+      </View>
+
+      <View style={styles.container}>
+        {/* Top Row: Brand, Icons */}
+        <View style={styles.topRow}>
+          <View style={styles.brandContainer}>
+              <Image 
+                source={require('../../assets/logo.png')} 
+                style={styles.logo}
+                resizeMode="contain"
+              />
+              <Text style={styles.brandText}>Menha Boutique</Text>
+          </View>
+          
+          <View style={styles.iconsRow}>
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Wishlist')}>
+                 <Ionicons name="heart-outline" size={24} color="#333" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Cart')}>
+                {cartCount > 0 && (
+                    <View style={styles.cartBadge}>
+                        <Text style={styles.cartBadgeText}>{cartCount}</Text>
+                    </View>
+                )}
+                <Ionicons name="bag-handle-outline" size={24} color="#333" />
+              </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBox}>
+            <TextInput 
+              style={styles.input} 
+              placeholder="Search for products..." 
+              placeholderTextColor="#999"
+            />
+            <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
+          </View>
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    backgroundColor: '#fff',
+  },
+  announcementBar: {
+    backgroundColor: '#1a472a', // Deep green
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  announcementText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   container: {
     paddingHorizontal: 15,
-    paddingTop: 10,
     paddingBottom: 10,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    paddingVertical: 10,
   },
   iconsRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  brand: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#E53935',
+  brandContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    height: 50,
+  },
+  logo: {
+      width: 40,
+      height: 40,
+      marginRight: 10,
+  },
+  brandText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    letterSpacing: 0.5,
   },
   iconButton: {
     padding: 5,
-    marginLeft: 10,
+    marginLeft: 5,
     position: 'relative',
   },
   cartBadge: {
     position: 'absolute',
     top: 0,
     right: 0,
-    backgroundColor: 'red',
-    borderRadius: 8,
+    backgroundColor: '#E53935',
+    borderRadius: 7,
     width: 14,
     height: 14,
     justifyContent: 'center',
@@ -85,22 +137,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   searchContainer: {
+    marginTop: 5,
+    marginBottom: 5,
+  },
+  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 40,
+    borderRadius: 25, // Rounder search bar
+    paddingHorizontal: 15,
+    height: 44,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   input: {
     flex: 1,
     height: '100%',
-    marginLeft: 10,
     fontSize: 14,
     color: '#333',
   },
   searchIcon: {
-    marginRight: 0,
+    marginLeft: 10,
   }
 });
 

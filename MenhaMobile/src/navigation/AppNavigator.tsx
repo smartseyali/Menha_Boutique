@@ -14,33 +14,48 @@ import ProfileScreen from '../screens/ProfileScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
+import AddressScreen from '../screens/AddressScreen';
 
 // Types
 export type RootStackParamList = {
   MainTabs: undefined;
   Login: { setIsAuthenticated?: (val: boolean) => void };
+  Signup: { setIsAuthenticated?: (val: boolean) => void };
   ProductDetail: { productId: string };
   Checkout: { cartItems: any[], totalAmount: number };
   Orders: undefined;
   Wishlist: undefined;
+  Address: undefined;
 };
 
 // Navigators
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
+import { useCart } from '../context/CartContext';
+
 // 1. Define Bottom Tab Navigator
 const MainTabs = () => {
+  const { cartCount } = useCart();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#E53935',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: '#f97316', // Orange
+        tabBarInactiveTintColor: '#686e7d', // Dark Gray
         tabBarStyle: {
             height: 60,
             paddingBottom: 8,
             paddingTop: 8,
+            backgroundColor: '#ffffff',
+            borderTopWidth: 1,
+            borderTopColor: '#f0f0f0',
+            elevation: 10,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
         },
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: any;
@@ -71,7 +86,14 @@ const MainTabs = () => {
       <Tab.Screen name="Home" component={HomeScreen} />
       {/* <Tab.Screen name="Category" component={CategoryScreen} /> */} 
       <Tab.Screen name="Wishlist" component={WishlistScreen} />
-      <Tab.Screen name="Cart" component={CartScreen} options={{ tabBarBadge: 3 }} /> 
+      <Tab.Screen 
+        name="Cart" 
+        component={CartScreen} 
+        options={{ 
+          tabBarBadge: cartCount > 0 ? cartCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#E53935', color: '#fff', fontSize: 10, minWidth: 16, height: 16, lineHeight: 16 }
+        }} 
+      /> 
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -125,6 +147,13 @@ const AppNavigator = () => {
           initialParams={{ setIsAuthenticated }}
         />
 
+        <Stack.Screen 
+          name="Signup" 
+          component={require('../screens/SignupScreen').default} 
+          options={{ headerShown: false }} 
+          initialParams={{ setIsAuthenticated }}
+        />
+
         {/* Detail & Stack Screens */}
         <Stack.Screen 
             name="ProductDetail" 
@@ -142,6 +171,12 @@ const AppNavigator = () => {
             name="Orders" 
             component={OrdersScreen} 
             options={{ title: 'My Orders' }} 
+        /> 
+        
+        <Stack.Screen 
+            name="Address" 
+            component={AddressScreen} 
+            options={{ headerShown: false }} 
         /> 
     </Stack.Navigator>
   );

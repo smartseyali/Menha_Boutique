@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Switch, StatusBar, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
@@ -25,21 +26,30 @@ const ProfileScreen = () => {
   ];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       {/* Header Profile Section */}
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
-           <Ionicons name="person" size={40} color="#ccc" />
+           <Ionicons name="person" size={40} color="#999" />
           {/* <Image source={{ uri: 'https://via.placeholder.com/100' }} style={styles.avatar} /> */}
         </View>
         <Text style={styles.name}>Guest User</Text>
         <Text style={styles.email}>guest@example.com</Text>
+        
         <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit Profile</Text>
+            <LinearGradient
+                colors={['#f59e0b', '#f97316']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.editBtnGradient}
+            >
+                <Text style={styles.editButtonText}>Edit Profile</Text>
+            </LinearGradient>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.menuContainer}>
+      <ScrollView style={styles.menuContainer} showsVerticalScrollIndicator={false}>
         {menuItems.map((item, index) => (
           <TouchableOpacity 
             key={index} 
@@ -47,111 +57,136 @@ const ProfileScreen = () => {
             onPress={() => item.screen && navigation.navigate(item.screen)}
           >
             <View style={styles.iconBox}>
-                <Ionicons name={item.icon as any} size={22} color="#555" />
+                <Ionicons name={item.icon as any} size={22} color="#1a472a" />
             </View>
             <Text style={styles.menuTitle}>{item.title}</Text>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            <Ionicons name="chevron-forward" size={18} color="#ccc" />
           </TouchableOpacity>
         ))}
 
-        <TouchableOpacity style={[styles.menuItem, styles.logoutButton]} onPress={handleLogout}>
-            <View style={[styles.iconBox, {backgroundColor: '#ffebee'}]}>
-                <Ionicons name="log-out-outline" size={22} color="#E53935" />
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <View style={[styles.iconBox, styles.logoutIconBox]}>
+                <Ionicons name="log-out-outline" size={22} color="#d32f2f" />
             </View>
             <Text style={[styles.menuTitle, styles.logoutText]}>Log Out</Text>
         </TouchableOpacity>
+        
+        <View style={styles.versionContainer}>
+            <Text style={styles.versionText}>App Version 1.0.0</Text>
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff',
   },
   header: {
     alignItems: 'center',
-    padding: 30,
+    paddingVertical: 30,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
   },
   avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f0f0f0',
-    marginBottom: 10,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#f5f5f5',
+    marginBottom: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
+    borderWidth: 2,
+    borderColor: '#fff',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   avatar: {
     width: '100%',
     height: '100%',
+    borderRadius: 45,
   },
   name: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#333',
     marginBottom: 5,
   },
   email: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 15,
+    color: '#888',
+    marginBottom: 20,
   },
   editButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#333',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  editBtnGradient: {
+    paddingHorizontal: 25,
+    paddingVertical: 10,
     borderRadius: 20,
   },
   editButtonText: {
-    color: '#333',
-    fontSize: 12,
+    color: '#fff',
+    fontSize: 13,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   menuContainer: {
-    marginTop: 15,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
+    flex: 1,
+    paddingTop: 10,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingVertical: 18,
+    paddingHorizontal: 25,
+    backgroundColor: '#fff',
+    marginBottom: 1,
   },
   iconBox: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: '#f5f5f5',
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: '#e6f4ea',
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: 15,
+      marginRight: 20,
   },
   menuTitle: {
     flex: 1,
     fontSize: 16,
     color: '#333',
+    fontWeight: '500',
   },
   logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 25,
     marginTop: 20,
-    borderBottomWidth: 0,
+  },
+  logoutIconBox: {
+      backgroundColor: '#ffebee',
   },
   logoutText: {
-    color: '#E53935',
+    color: '#d32f2f',
     fontWeight: '600',
   },
+  versionContainer: {
+      padding: 30,
+      alignItems: 'center',
+  },
+  versionText: {
+      color: '#ccc',
+      fontSize: 12,
+  }
 });
 
 export default ProfileScreen;

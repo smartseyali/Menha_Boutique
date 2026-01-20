@@ -15,14 +15,11 @@ const WishlistScreen = () => {
 
   const fetchWishlist = async () => {
     try {
-      // Mocked endpoint or actual if available
-      // const response = await api.get('/wishlist');
-      // setWishlist(response.data);
-      
-      // Temporary Mock
-      setWishlist([]); 
+      const response = await api.get('/wishlist');
+      setWishlist(response.data.wishlist || response.data || []); 
     } catch (error) {
        console.error(error);
+       // Alert.alert('Error', 'Failed to fetch wishlist');
     } finally {
        setLoading(false);
     }

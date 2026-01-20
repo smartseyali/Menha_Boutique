@@ -30,12 +30,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#1a472a', // Deep green
+    letterSpacing: 0.5,
   },
   seeAll: {
     fontSize: 14,
-    color: '#007AFF',
+    color: '#f97316', // Orange
     fontWeight: '600',
   },
 });

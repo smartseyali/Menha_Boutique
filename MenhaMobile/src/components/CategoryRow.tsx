@@ -12,6 +12,8 @@ interface CategoryRowProps {
   onPress: (category: Category) => void;
 }
 
+import { resolveImageUrl } from '../utils/imageUtils';
+
 const CategoryRow: React.FC<CategoryRowProps> = ({ data, onPress }) => {
   if (!data || data.length === 0) return null;
 
@@ -23,7 +25,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ data, onPress }) => {
     >
       <View style={styles.imageContainer}>
         <Image 
-          source={{ uri: item.image || 'https://via.placeholder.com/125' }} 
+          source={{ uri: resolveImageUrl(item.image) }} 
           style={styles.image} 
           resizeMode="cover" 
         />
@@ -34,9 +36,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ data, onPress }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-         <Text style={styles.title}>Top <Text style={styles.highlight}>Categories</Text></Text>
-      </View>
+{/* Header removed for better composition */}
       <FlatList
         data={data}
         renderItem={renderItem}
@@ -60,9 +60,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1a472a', // Deep green for section titles
+    letterSpacing: 0.5,
   },
   highlight: {
     color: '#E53935', // Or brand color

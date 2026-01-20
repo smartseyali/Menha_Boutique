@@ -11,7 +11,7 @@ class Order {
     // Generate unique order number using sequence
     const seqResult = await pool.query("SELECT nextval('order_number_seq')");
     const nextVal = seqResult.rows[0].nextval;
-    const orderNumber = `PK-${nextVal.toString().padStart(3, '0')}`;
+    const orderNumber = `${nextVal.toString().padStart(3, '0')}`;
     
     const query = `
       INSERT INTO orders (order_number, user_id, shipping_address_id, billing_address_id,

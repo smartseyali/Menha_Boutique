@@ -47,23 +47,23 @@ const HomeScreen = () => {
   const fetchData = async () => {
     try {
       // Fetch Banners
-      // Note: Backend /banners returns banners. We might need to filter by type if needed, but here we take all or slice.
+      // Note: Backend /banners returns an array directly
       const bannersRes = await api.get('/banners').catch(err => ({ data: [] }));
       const bannersData = Array.isArray(bannersRes.data) ? bannersRes.data : [];
-      // Map banner data to match Banner component expectation if needed
-      // Banner component expects: image, id. Backend returns image_url.
       const mappedBanners = bannersData.map((b: any) => ({
           id: b.id,
-          image: b.image_url,
+          image: b.image_url || b.imageUrl || b.image,
           name: b.title || '',
           link: b.link
       }));
-      setBanners(mappedBanners.length > 0 ? mappedBanners : []); // If empty, we might fallback or show nothing
+      setBanners(mappedBanners.length > 0 ? mappedBanners : []);
 
       // Fetch Categories
-      const categoriesRes = await api.get('/categories').catch(err => ({ data: [] }));
-      const categoriesData = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
-      setCategories(categoriesData);
+      // Backend returns { categories: [...] }
+      const categoriesRes = await api.get('/categories').catch(err => ({ data: { categories: [] } }));
+      const categoriesResponseData = categoriesRes.data || {};
+      const categoriesList = categoriesResponseData.categories || (Array.isArray(categoriesResponseData) ? categoriesResponseData : []);
+      setCategories(categoriesList);
 
       // Fetch Products (New Arrivals / All)
       const productsRes = await api.get('/products').catch(err => ({ data: [] }));
@@ -73,8 +73,9 @@ const HomeScreen = () => {
 
       // Fetch Best Selling
       const bestSellingRes = await api.get('/products/bestselling').catch(err => ({ data: [] }));
-      const bestSellingData = Array.isArray(bestSellingRes.data) ? bestSellingRes.data : [];
-      setBestSelling(bestSellingData.length > 0 ? bestSellingData : productsData.slice(0, 4));
+      const bestSellingResponseData = bestSellingRes.data || {};
+      const bestSellingList = bestSellingResponseData.products || (Array.isArray(bestSellingResponseData) ? bestSellingResponseData : []);
+      setBestSelling(bestSellingList.length > 0 ? bestSellingList : productsData.slice(0, 4));
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -123,6 +124,7 @@ const HomeScreen = () => {
           {banners.length > 0 && <Banner data={banners} onPress={() => {}} />}
 
           {/* Categories */}
+          <SectionHeader title="Shop By Category" />
           <CategoryRow data={categories} onPress={handleCategoryPress} />
 
           {/* Best Selling Section */}

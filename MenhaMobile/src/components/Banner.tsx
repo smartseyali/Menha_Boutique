@@ -8,6 +8,8 @@ interface BannerProps {
   onPress: (item: any) => void;
 }
 
+import { resolveImageUrl } from '../utils/imageUtils';
+
 const Banner: React.FC<BannerProps> = ({ data, onPress }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -26,9 +28,9 @@ const Banner: React.FC<BannerProps> = ({ data, onPress }) => {
       return () => clearInterval(interval);
     }
   }, [currentIndex, data.length]);
-
   const renderItem = ({ item }: { item: any }) => {
-    const imageUrl = item.image || (item.images && item.images[0]?.url) || 'https://via.placeholder.com/800x400';
+    const rawImageUrl = item.image || (item.images && item.images[0]?.url);
+    const imageUrl = resolveImageUrl(rawImageUrl);
     return (
       <TouchableOpacity activeOpacity={0.9} onPress={() => onPress(item)}>
         <View style={styles.cardContainer}>
