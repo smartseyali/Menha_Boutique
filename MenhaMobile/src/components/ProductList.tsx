@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, THEME } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 // Two columns with padding
@@ -19,9 +20,28 @@ import { resolveImageUrl } from '../utils/imageUtils';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
+import { useWishlist } from '../context/WishlistContext';
 
 const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
   const navigation = useNavigation<any>();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+
+  const handleWishlistPress = async (item: any) => {
+      try {
+          await toggleWishlist(item);
+      } catch (error: any) {
+          if (error.message === 'Login Required') {
+             Alert.alert(
+                'Login Required',
+                'Please login to manage your wishlist.',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Login', onPress: () => navigation.navigate('Login') }
+                ]
+            );
+          }
+      }
+  };
 
   const handleAddToCart = async (item: any) => {
     const token = await AsyncStorage.getItem('auth_token');
@@ -128,8 +148,12 @@ const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
             )}
             
             {/* Wishlist Icon */}
-             <TouchableOpacity style={styles.wishlistIcon}>
-                 <Ionicons name="heart-outline" size={18} color="#333" />
+             <TouchableOpacity style={styles.wishlistIcon} onPress={() => handleWishlistPress(item)}>
+                 <Ionicons 
+                    name={isInWishlist(item.id) ? "heart" : "heart-outline"} 
+                    size={18} 
+                    color={isInWishlist(item.id) ? COLORS.accent : "#333"} 
+                 />
              </TouchableOpacity>
 
             <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
@@ -146,7 +170,7 @@ const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
                     key={star} 
                     name={star <= Math.round(rating) ? "star" : "star-outline"} 
                     size={10} 
-                    color="#FFC107" 
+                    color={COLORS.warning} 
                   />
                 ))}
               </View>
@@ -166,7 +190,7 @@ const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
 
           <TouchableOpacity style={styles.addButtonContainer} onPress={() => handleAddButtonPress(item)}>
             <LinearGradient
-              colors={['#f59e0b', '#f97316']}
+              colors={THEME.gradients.primary as any}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.addButton}
@@ -232,7 +256,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     left: 10,
-    backgroundColor: '#E53935',
+    backgroundColor: COLORS.accent,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
@@ -297,7 +321,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1a472a', // Deep green for price
+    color: COLORS.primary, // Deep green for price
     marginRight: 6,
   },
   oldPrice: {

@@ -5,12 +5,14 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, THEME } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 
 import { resolveImageUrl } from '../utils/imageUtils';
 
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 const ProductDetailScreen = () => {
   const route = useRoute<any>();
@@ -20,7 +22,8 @@ const ProductDetailScreen = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
-  const [isWishlist, setIsWishlist] = useState(false);
+  
+  const { isInWishlist, toggleWishlist: contextToggleWishlist } = useWishlist();
 
   const { updateCartCount } = useCart();
 
@@ -99,6 +102,10 @@ const ProductDetailScreen = () => {
 
   const toggleWishlist = async () => {
       try {
+          // Check auth handled in context method, but context method might throw error 
+          // to let UI handle the specific Alert.
+          // OR the context handles the backend call. 
+          // We can check token here first if we want same UX as ProductList.
           const token = await AsyncStorage.getItem('auth_token');
           if (!token) {
               Alert.alert('Login Required', 'Please login to add to wishlist', [
@@ -108,10 +115,16 @@ const ProductDetailScreen = () => {
               return;
           }
 
-          // API Call
-          await api.post('/wishlist/add', { productId: product.id });
-          setIsWishlist(!isWishlist); // Optimistic update
-          Alert.alert('Success', isWishlist ? 'Removed from wishlist' : 'Added to wishlist');
+          if (product) {
+              await contextToggleWishlist(product);
+               // Context handles refresh and state update
+              const inWishlist = isInWishlist(product.id);
+              // Since toggle is async and context refreshes, wait a bit or trust context update?
+              // The component will re-render when context changes.
+              // We don't need to manually alert "Success" unless desired.
+              // Existing code alerted.
+              // Alert.alert('Success', !inWishlist ? 'Added to wishlist' : 'Removed from wishlist');
+          }
       } catch (error) {
           Alert.alert('Error', 'Could not update wishlist');
       }
@@ -151,7 +164,11 @@ const ProductDetailScreen = () => {
             </TouchableOpacity>
             <View style={{flexDirection: 'row'}}>
                 <TouchableOpacity style={[styles.iconBtn, { marginRight: 10 }]} onPress={toggleWishlist}>
-                    <Ionicons name={isWishlist ? "heart" : "heart-outline"} size={24} color={isWishlist ? "#E53935" : "#333"} />
+                    <Ionicons 
+                        name={product && isInWishlist(product.id) ? "heart" : "heart-outline"} 
+                        size={24} 
+                        color={product && isInWishlist(product.id) ? COLORS.accent : "#333"} 
+                    />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
                     <Ionicons name="cart-outline" size={24} color="#333" />
@@ -229,7 +246,7 @@ const ProductDetailScreen = () => {
         <View style={styles.footerBtnContainer}>
             <TouchableOpacity onPress={() => addToCart(true)} disabled={adding} style={{flex:1}}>
                 <LinearGradient
-                    colors={['#f59e0b', '#f97316']}
+                    colors={THEME.gradients.primary as any}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.buyBtn}
@@ -292,7 +309,7 @@ const styles = StyleSheet.create({
       position: 'absolute',
       bottom: 20,
       left: 20,
-      backgroundColor: '#E53935',
+      backgroundColor: COLORS.accent,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 4,
@@ -332,7 +349,7 @@ const styles = StyleSheet.create({
   ratingText: {
       fontSize: 14,
       fontWeight: 'bold',
-      color: '#f59e0b',
+      color: COLORS.warning,
   },
   reviewText: {
       color: '#888',
@@ -346,7 +363,7 @@ const styles = StyleSheet.create({
       borderRadius: 4,
   },
   inStock: {
-      color: '#1e8e3e',
+      color: COLORS.success,
       fontSize: 12,
       fontWeight: '600',
   },
@@ -357,7 +374,7 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 28,
-    color: '#1a472a', // Brand green
+    color: COLORS.primary, // Brand green
     fontWeight: '700',
     marginRight: 10,
   },
@@ -460,7 +477,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e2e2e2',
+    borderColor: COLORS.primary,
     paddingVertical: 12,
     borderRadius: 30,
     alignItems: 'center',
@@ -469,7 +486,7 @@ const styles = StyleSheet.create({
   addToCartText: {
     fontWeight: '700',
     fontSize: 14,
-    color: '#333',
+    color: COLORS.primary,
   },
   buyBtn: {
     flex: 1,

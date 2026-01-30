@@ -183,7 +183,7 @@ const SignupScreen = ({ route }: any) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
       <ImageBackground 
-        source={{ uri: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80' }} 
+        source={require('../../assets/login_bg.jpg')} 
         style={styles.backgroundImage}
       >
         <LinearGradient

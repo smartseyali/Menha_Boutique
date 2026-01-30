@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, SafeAreaView, StatusBar, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../constants/theme';
 
 const OrdersScreen = () => {
+  const navigation = useNavigation<any>();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,19 +27,23 @@ const OrdersScreen = () => {
 
   const getStatusColor = (status: string) => {
       switch(status?.toLowerCase()) {
-          case 'delivered': return '#1e8e3e';
-          case 'cancelled': return '#E53935';
-          case 'processing': return '#f59e0b';
-          default: return '#007AFF';
+          case 'delivered': return COLORS.success;
+          case 'cancelled': return COLORS.danger;
+          case 'processing': return COLORS.warning;
+          default: return COLORS.info;
       }
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.card}>
+    <TouchableOpacity 
+        style={styles.card}
+        onPress={() => navigation.navigate('OrderDetail', { orderId: item.id, orderData: item })}
+        activeOpacity={0.9}
+    >
       <View style={styles.header}>
           <View style={styles.orderIdContainer}>
               <Ionicons name="cube-outline" size={18} color="#333" />
-              <Text style={styles.orderId}>Order #{item.id || item.order_number}</Text>
+              <Text style={styles.orderId}>Order #{item.order_number || item.id}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
             <Text style={[styles.status, { color: getStatusColor(item.status) }]}>{item.status}</Text>
@@ -52,13 +59,18 @@ const OrdersScreen = () => {
           </View>
           <View style={{alignItems: 'flex-end'}}>
               <Text style={styles.label}>Total Amount</Text>
-              <Text style={styles.totalPrice}>₹{item.total_amount || item.total}</Text>
+              <Text style={styles.totalPrice}>₹{item.total_price}</Text>
           </View>
       </View>
-    </View>
+      
+      <View style={styles.footer}>
+          <Text style={styles.viewDetails}>View Details</Text>
+          <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
+      </View>
+    </TouchableOpacity>
   );
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#f97316"/></View>;
+  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#f91684ff"/></View>;
 
   if (orders.length === 0) {
       return (
@@ -149,8 +161,22 @@ const styles = StyleSheet.create({
   totalPrice: {
       fontSize: 18,
       fontWeight: '700',
-      color: '#1a472a', // Brand deep green
+      color: COLORS.primary, // Brand deep green
   },
+  footer: {
+      marginTop: 15,
+      paddingTop: 15,
+      borderTopWidth: 1,
+      borderTopColor: '#f0f0f0',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+  },
+  viewDetails: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: COLORS.primary,
+  }
 });
 
 export default OrdersScreen;

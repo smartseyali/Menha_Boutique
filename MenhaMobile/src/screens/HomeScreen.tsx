@@ -3,6 +3,8 @@ import { View, ScrollView, RefreshControl, StyleSheet, ActivityIndicator, SafeAr
 import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 
+import { COLORS } from '../constants/theme';
+
 // Components
 import Header from '../components/Header';
 import Banner from '../components/Banner';
@@ -107,7 +109,7 @@ const HomeScreen = () => {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#E53935" />
+        <ActivityIndicator size="large" color={COLORS.accent} />
       </View>
     );
   }

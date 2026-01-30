@@ -4,12 +4,36 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, THEME } from '../constants/theme';
 
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
 
+  const [user, setUser] = useState({ name: 'Guest User', email: 'guest@example.com' });
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  const loadUser = async () => {
+    try {
+      const userInfo = await AsyncStorage.getItem('user_info');
+      if (userInfo) {
+          const parsedUser = JSON.parse(userInfo);
+          // Handle potential different field names if necessary, defaulting to existing structure
+          setUser({
+              name: parsedUser.name || parsedUser.first_name + ' ' + parsedUser.last_name || 'User',
+              email: parsedUser.email || ''
+          });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleLogout = async () => {
     await AsyncStorage.removeItem('auth_token');
+    await AsyncStorage.removeItem('user_info');
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],
@@ -34,12 +58,12 @@ const ProfileScreen = () => {
            <Ionicons name="person" size={40} color="#999" />
           {/* <Image source={{ uri: 'https://via.placeholder.com/100' }} style={styles.avatar} /> */}
         </View>
-        <Text style={styles.name}>Guest User</Text>
-        <Text style={styles.email}>guest@example.com</Text>
+        <Text style={styles.name}>{user.name}</Text>
+        <Text style={styles.email}>{user.email}</Text>
         
         <TouchableOpacity style={styles.editButton}>
             <LinearGradient
-                colors={['#f59e0b', '#f97316']}
+                colors={THEME.gradients.primary as any}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.editBtnGradient}
@@ -57,7 +81,7 @@ const ProfileScreen = () => {
             onPress={() => item.screen && navigation.navigate(item.screen)}
           >
             <View style={styles.iconBox}>
-                <Ionicons name={item.icon as any} size={22} color="#1a472a" />
+                <Ionicons name={item.icon as any} size={22} color={COLORS.primary} />
             </View>
             <Text style={styles.menuTitle}>{item.title}</Text>
             <Ionicons name="chevron-forward" size={18} color="#ccc" />
@@ -66,7 +90,7 @@ const ProfileScreen = () => {
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <View style={[styles.iconBox, styles.logoutIconBox]}>
-                <Ionicons name="log-out-outline" size={22} color="#d32f2f" />
+                <Ionicons name="log-out-outline" size={22} color={COLORS.danger} />
             </View>
             <Text style={[styles.menuTitle, styles.logoutText]}>Log Out</Text>
         </TouchableOpacity>
@@ -176,7 +200,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#ffebee',
   },
   logoutText: {
-    color: '#d32f2f',
+    color: COLORS.danger,
     fontWeight: '600',
   },
   versionContainer: {

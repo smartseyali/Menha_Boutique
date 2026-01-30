@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
 import { useCart } from '../context/CartContext';
+import { COLORS, THEME } from '../constants/theme';
 
 const CheckoutScreen = () => {
   const navigation = useNavigation<any>();
@@ -169,11 +170,15 @@ const CheckoutScreen = () => {
         const orderPayload = {
             shippingAddressId: finalAddressId,
             billingAddressId: finalAddressId,
-            items: cartItems.map((item: any) => ({ 
-                productId: item.product_id || item.id, 
-                quantity: item.quantity,
-                price: item.price || item.unit_price || 0 // Ensure price is sent
-            })),
+            items: cartItems.map((item: any) => {
+                const unitPrice = item.new_price || item.newPrice || item.price || 0; 
+                return { 
+                    productId: item.product_id || item.id, 
+                    quantity: item.quantity,
+                    price: unitPrice,
+                    total: unitPrice * item.quantity
+                };
+            }),
             paymentMethod: paymentMethod === 'online' ? 'razorpay' : 'cod',
             shippingMethod: 'free',
             total: totalAmount 
@@ -452,7 +457,7 @@ const CheckoutScreen = () => {
           disabled={isProcessing}
         >
             <LinearGradient
-                colors={isProcessing ? ['#ccc', '#bbb'] : ['#f59e0b', '#f97316']}
+                colors={isProcessing ? ['#ccc', '#bbb'] : THEME.gradients.primary as any}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.payButton}
@@ -499,7 +504,7 @@ const CheckoutScreen = () => {
                                     {((selectionType === 'country' && selectedCountry?.id === item.id) ||
                                       (selectionType === 'state' && selectedState?.id === item.id) ||
                                       (selectionType === 'city' && selectedCity?.id === item.id)) && (
-                                        <Ionicons name="checkmark" size={20} color="#f97316" />
+                                        <Ionicons name="checkmark" size={20} color={COLORS.primary} />
                                     )}
                                 </TouchableOpacity>
                             ))}
@@ -562,7 +567,7 @@ const styles = StyleSheet.create({
       fontWeight: '500',
   },
   freeDelivery: {
-      color: '#1e8e3e',
+      color: COLORS.success,
       fontWeight: 'bold',
   },
   divider: {
@@ -583,7 +588,7 @@ const styles = StyleSheet.create({
   totalValue: {
       fontWeight: '700',
       fontSize: 18,
-      color: '#E53935',
+      color: COLORS.primary,
   },
   paymentOption: {
       flexDirection: 'row',
@@ -596,8 +601,8 @@ const styles = StyleSheet.create({
       backgroundColor: '#fff',
   },
   paymentOptionSelected: {
-      borderColor: '#f97316',
-      backgroundColor: '#fff7ed',
+      borderColor: COLORS.primary,
+      backgroundColor: '#f0fdf4', // Very light green
   },
   radio: {
       width: 20,
@@ -608,7 +613,7 @@ const styles = StyleSheet.create({
       marginRight: 10,
   },
   radioSelected: {
-      borderColor: '#f97316',
+      borderColor: COLORS.primary,
       borderWidth: 5,
   },
   paymentText: {
@@ -654,8 +659,8 @@ const styles = StyleSheet.create({
       backgroundColor: '#fff',
   },
   addressCardSelected: {
-      borderColor: '#f97316',
-      backgroundColor: '#fff7ed',
+      borderColor: COLORS.primary,
+      backgroundColor: '#f0fdf4',
   },
   radioContainer: {
       marginRight: 10,
@@ -685,7 +690,7 @@ const styles = StyleSheet.create({
       marginTop: 5,
   },
   addNewText: {
-      color: '#f97316',
+      color: COLORS.primary,
       fontWeight: '600',
       fontSize: 14,
   },

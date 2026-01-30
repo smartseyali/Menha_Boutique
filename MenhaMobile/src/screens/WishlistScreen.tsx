@@ -4,34 +4,30 @@ import api from '../services/api';
 import ProductList from '../components/ProductList';
 import { useNavigation } from '@react-navigation/native';
 
+import { useWishlist } from '../context/WishlistContext';
+
 const WishlistScreen = () => {
-  const [wishlist, setWishlist] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { wishlist, refreshWishlist } = useWishlist();
   const navigation = useNavigation<any>();
 
   useEffect(() => {
-    fetchWishlist();
+    refreshWishlist();
   }, []);
 
-  const fetchWishlist = async () => {
-    try {
-      const response = await api.get('/wishlist');
-      setWishlist(response.data.wishlist || response.data || []); 
-    } catch (error) {
-       console.error(error);
-       // Alert.alert('Error', 'Failed to fetch wishlist');
-    } finally {
-       setLoading(false);
-    }
-  };
-
   const handleProductPress = (item: any) => {
+    // The mapped item has id = product_id, so this works
     navigation.navigate('ProductDetail', { productId: item.id });
   };
 
-  if (loading) {
-     return <View style={styles.center}><ActivityIndicator size="large" color="#E53935"/></View>;
-  }
+  // Map wishlist items to be compatible with ProductList
+  const mappedWishlist = wishlist.map(item => ({
+      ...item,
+      id: item.product_id, // Use product ID as expected by ProductList
+      // Ensure other fields match if necessary
+      name: item.title || item.name,
+      price: item.new_price || item.price,
+      // primary_image is already there
+  }));
 
   if (wishlist.length === 0) {
       return (
@@ -44,7 +40,10 @@ const WishlistScreen = () => {
 
   return (
     <View style={styles.container}>
-       <ProductList data={wishlist} onPress={handleProductPress} />
+       <ProductList 
+            data={mappedWishlist} 
+            onPress={handleProductPress} 
+       />
     </View>
   );
 };

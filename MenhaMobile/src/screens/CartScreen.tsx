@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../services/api';
 import { resolveImageUrl } from '../utils/imageUtils';
+import { COLORS, THEME } from '../constants/theme';
 
 import { useCart } from '../context/CartContext';
 
@@ -125,7 +126,7 @@ const CartScreen = () => {
           <View style={styles.infoRow}>
             <Text style={styles.name} numberOfLines={2}>{item.name || item.title}</Text>
             <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.deleteBtn}>
-                <Ionicons name="trash-outline" size={20} color="#ff4d4f" />
+                <Ionicons name="trash-outline" size={20} color={COLORS.danger} />
             </TouchableOpacity>
           </View>
           
@@ -149,7 +150,7 @@ const CartScreen = () => {
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color="#f97316"/></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color={COLORS.accent}/></View>;
   }
 
   if (cartItems.length === 0) {
@@ -162,7 +163,7 @@ const CartScreen = () => {
               <Text style={styles.emptySubText}>Looks like you haven't added anything yet.</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Home')} style={{marginTop: 20}}>
                    <LinearGradient
-                    colors={['#f59e0b', '#f97316']}
+                    colors={THEME.gradients.primary as any}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.shopNowBtn}
@@ -197,7 +198,7 @@ const CartScreen = () => {
           
           <TouchableOpacity onPress={handleCheckout}>
               <LinearGradient
-                colors={['#f59e0b', '#f97316']}
+                colors={THEME.gradients.primary as any}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.checkoutBtn}
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1a472a', // Deep green
+    color: COLORS.primary, // Deep green
     marginTop: 5,
   },
   counterContainer: {
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   totalValue: {
       fontSize: 22,
       fontWeight: '700',
-      color: '#1a472a',
+      color: COLORS.primary,
   },
   checkoutBtn: {
       paddingVertical: 15,

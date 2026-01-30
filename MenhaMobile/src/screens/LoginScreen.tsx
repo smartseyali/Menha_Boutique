@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, THEME } from '../constants/theme';
 
 const LoginScreen = ({ route }: any) => {
   const { setIsAuthenticated } = route.params || {};
@@ -32,6 +33,7 @@ const LoginScreen = ({ route }: any) => {
 
       setAuthToken(token);
       await AsyncStorage.setItem('auth_token', token);
+      await AsyncStorage.setItem('user_info', JSON.stringify(user));
       
       if (setIsAuthenticated) {
         setIsAuthenticated(true);
@@ -59,7 +61,7 @@ const LoginScreen = ({ route }: any) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
       <ImageBackground 
-        source={{ uri: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80' }} 
+        source={require('../../assets/login_bg.jpg')} 
         style={styles.backgroundImage}
       >
         <LinearGradient
@@ -100,7 +102,7 @@ const LoginScreen = ({ route }: any) => {
                     style={styles.loginBtnContainer}
                 >
                     <LinearGradient
-                        colors={['#f59e0b', '#f97316']}
+                        colors={THEME.gradients.primary as any}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.button}
@@ -130,9 +132,8 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     padding: 20,
-    paddingBottom: 50,
   },
   formContainer: {
       marginBottom: 30,
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
   },
   loginBtnContainer: {
       marginTop: 20,
-      shadowColor: '#f97316',
+      shadowColor: COLORS.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
   },
   linkHighlight: {
       fontWeight: 'bold',
-      color: '#f59e0b',
+      color: COLORS.primary,
   }
 });
 

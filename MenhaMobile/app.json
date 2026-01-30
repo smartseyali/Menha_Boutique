@@ -29,6 +29,18 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ab57f212-815f-409b-83bf-43f7225794f2"
+      }
+    },
+    "owner": "smartseyalitech",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ab57f212-815f-409b-83bf-43f7225794f2"
+    }
   }
 }
