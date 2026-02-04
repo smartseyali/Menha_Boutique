@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Table, Button, Form, Modal } from 'react-bootstrap';
 import { adminApi } from '../../utils/adminApi';
 import { showSuccessToast, showErrorToast } from '../toast-popup/Toastify';
+import * as XLSX from 'xlsx';
 
 interface OrderItem {
     id: string;
@@ -65,6 +66,8 @@ const OrdersTab = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [newStatus, setNewStatus] = useState<string>('');
 
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
     // Debounce search effect using local timer logic or simplified effect
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -116,6 +119,120 @@ const OrdersTab = () => {
         } catch (error: any) {
             console.error('Error updating order status:', error);
             showErrorToast(error.message || 'Failed to update order status');
+        }
+    };
+
+    const handleExportOrders = async () => {
+        try {
+            setLoading(true);
+            // Fetch all matching orders for export (high limit)
+            const params: any = {
+                page: 1,
+                limit: 10000, 
+                status: statusFilter || undefined,
+            };
+            if (searchQuery) params.search = searchQuery;
+            if (fromDate) params.fromDate = fromDate;
+            if (toDate) params.toDate = toDate;
+
+            const response = await adminApi.getAllOrders(params);
+            const ordersToExport = response.orders || [];
+
+            if (ordersToExport.length === 0) {
+                showErrorToast("No orders to export");
+                setLoading(false);
+                return;
+            }
+
+            // Prepare data for Excel
+            const data = ordersToExport.map((order: Order) => ({
+                "Order Number": order.order_number,
+                "Customer Name": getCustomerName(order),
+                "Customer Phone": order.user_phone || order.user_email || 'N/A',
+                "Status": order.status,
+                "Total Items": order.total_items,
+                "Total Price": order.total_price,
+                "Payment Method": order.payment_method,
+                "Payment Status": order.payment_status,
+                "Date": new Date(order.created_at).toLocaleDateString(),
+                "Time": new Date(order.created_at).toLocaleTimeString()
+            }));
+
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Orders");
+
+            // Generate file name
+            const fileName = `Orders_Export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            
+            // Write file
+            XLSX.writeFile(wb, fileName);
+            showSuccessToast("Orders exported successfully");
+        } catch (error) {
+            console.error("Export error:", error);
+            showErrorToast("Failed to export orders");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Reset input value so same file can be selected again if needed
+        e.target.value = '';
+
+        try {
+            setLoading(true);
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                
+                // Parse data
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+                
+                // Extract updates
+                const updates = data.map(row => ({
+                    order_number: row["Order Number"]?.toString(), // Ensure string
+                    status: row["Status"]
+                })).filter(u => u.order_number && u.status);
+
+                if (updates.length === 0) {
+                    showErrorToast("No valid order updates found in file");
+                    setLoading(false);
+                    return;
+                }
+
+                // Send to backend
+                const response = await adminApi.bulkUpdateOrderStatus(updates);
+                
+                const successCount = response.results.success.length;
+                const failCount = response.results.failed.length;
+                
+                if (successCount > 0) {
+                    showSuccessToast(`Updated ${successCount} orders successfully`);
+                }
+                if (failCount > 0) {
+                    showErrorToast(`Failed to update ${failCount} orders`);
+                    console.error("Failed updates:", response.results.failed);
+                }
+                
+                fetchOrders();
+            };
+            reader.readAsBinaryString(file);
+        } catch (error: any) {
+            console.error("Import error:", error);
+            showErrorToast("Failed to process file");
+            setLoading(false);
         }
     };
 
@@ -214,6 +331,31 @@ const OrdersTab = () => {
                                         style={{ width: '210px' }}
                                     />
                                 </div>
+
+                                {/* Export/Import Buttons */}
+                                <Button 
+                                    variant="outline-success" 
+                                    size="sm" 
+                                    onClick={handleExportOrders}
+                                    title="Export Orders to Excel"
+                                >
+                                    <i className="ri-file-excel-2-line me-1"></i> Export
+                                </Button>
+                                <Button 
+                                    variant="outline-primary" 
+                                    size="sm" 
+                                    onClick={handleImportClick}
+                                    title="Import Status Updates"
+                                >
+                                    <i className="ri-upload-cloud-line me-1"></i> Import Status
+                                </Button>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    style={{ display: 'none' }} 
+                                    accept=".xlsx, .xls"
+                                    onChange={handleFileUpload}
+                                />
 
                                 {/* Clear Button */}
                                 {(searchQuery || fromDate || toDate || statusFilter) && (

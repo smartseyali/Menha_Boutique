@@ -82,6 +82,24 @@ class Order {
     return result.rows[0];
   }
 
+  static async updateStatusByOrderNumber(orderNumber, status) {
+    const query = `
+      UPDATE orders 
+      SET status = $1, updated_at = current_timestamp
+      WHERE order_number = $2
+      RETURNING *
+    `;
+    const result = await pool.query(query, [status, orderNumber]);
+    
+    // We need to return the full object with emails/phones for notifications, 
+    // but UPDATE RETURNING only returns the table columns.
+    // So if it updated successfully, fetch the detailed object.
+    if (result.rows[0]) {
+        return await this.findById(result.rows[0].id);
+    }
+    return null;
+  }
+
   static async updatePaymentStatus(id, paymentStatus) {
     const query = `
       UPDATE orders 

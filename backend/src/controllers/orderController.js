@@ -281,13 +281,60 @@ async function updateOrderStatus(req, res, next) {
     // Send status update email
     if (order.email) {
       sendOrderStatusUpdate(order, order.email).catch(err => console.error('Failed to send status update email:', err));
-    } else if (order.user_id) {
-        // If no email on order but has user_id, we might want to fetch user
-        // For now skipping to avoid complexity
     }
   } catch (error) {
     next(error);
   }
+}
+
+async function bulkUpdateOrderStatus(req, res, next) {
+    try {
+        const { updates } = req.body; // Expecting { updates: [{ order_number: '...', status: '...' }, ...] }
+
+        if (!Array.isArray(updates) || updates.length === 0) {
+            return res.status(400).json({ message: 'Invalid or empty updates list' });
+        }
+
+        const results = {
+            success: [],
+            failed: []
+        };
+
+        for (const update of updates) {
+            try {
+                const { order_number, status } = update;
+                if (!order_number || !status) {
+                    results.failed.push({ order_number, reason: 'Missing order_number or status' });
+                    continue;
+                }
+
+                // Update using order number
+                const order = await Order.updateStatusByOrderNumber(order_number, status.toLowerCase());
+                
+                if (order) {
+                    results.success.push({ order_number, status: order.status });
+                    
+                    // Send email - fire and forget
+                    if (order.email) {
+                        sendOrderStatusUpdate(order, order.email).catch(err => console.error(`Failed to send email for order ${order_number}:`, err));
+                    }
+                } else {
+                    results.failed.push({ order_number, reason: 'Order not found' });
+                }
+            } catch (err) {
+                console.error(`Error updating order ${update.order_number}:`, err);
+                results.failed.push({ order_number: update.order_number, reason: err.message });
+            }
+        }
+
+        res.json({
+            message: 'Bulk update completed',
+            results
+        });
+
+    } catch (error) {
+        next(error);
+    }
 }
 
 module.exports = {
@@ -297,5 +344,6 @@ module.exports = {
   createOrder,
   getAllOrders,
   updateOrderStatus,
+  bulkUpdateOrderStatus,
 };
 

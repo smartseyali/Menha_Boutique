@@ -171,6 +171,19 @@ export const adminApi = {
     }
   },
 
+  bulkUpdateOrderStatus: async (updates: Array<{ order_number: string; status: string }>) => {
+    try {
+      const response = await adminApiRequest('/api/orders/bulk-status', {
+        method: 'PUT',
+        body: JSON.stringify({ updates }),
+      });
+      return response;
+    } catch (error: any) {
+      console.error('Error bulk updating order status:', error);
+      throw error;
+    }
+  },
+
   // Products Management
   createProduct: async (productData: any) => {
     try {
