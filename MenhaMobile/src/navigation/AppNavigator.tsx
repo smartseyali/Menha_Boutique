@@ -4,8 +4,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons'; // Ensure typical Expo icons
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS } from '../constants/theme';
+import { useCart } from '../context/CartContext';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -36,11 +38,11 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
-import { useCart } from '../context/CartContext';
-
 // 1. Define Bottom Tab Navigator
+
 const MainTabs = () => {
   const { cartCount } = useCart();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -49,8 +51,8 @@ const MainTabs = () => {
         tabBarActiveTintColor: COLORS.primary, // Brand Green
         tabBarInactiveTintColor: '#686e7d', // Dark Gray
         tabBarStyle: {
-            height: 60,
-            paddingBottom: 8,
+            height: 60 + insets.bottom,
+            paddingBottom: 8 + insets.bottom,
             paddingTop: 8,
             backgroundColor: '#ffffff',
             borderTopWidth: 1,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, SafeAreaView, StatusBar, ActivityIndicator, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, SafeAreaView, StatusBar, ActivityIndicator, Image, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -271,184 +271,190 @@ const CheckoutScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        
-        {/* Address Section */}
-        <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-                <Ionicons name="location-outline" size={20} color="#333" />
-                <Text style={styles.sectionTitle}>Delivery Address</Text>
-            </View>
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+            style={{flex: 1}}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent}>
             
-            {savedAddresses.length > 0 && (
-                <View style={styles.addressList}>
-                    {savedAddresses.map((item) => (
-                        <TouchableOpacity 
-                            key={item.id} 
-                            style={[styles.addressCard, selectedAddressId === item.id && !addNewAddress && styles.addressCardSelected]}
-                            onPress={() => selectAddress(item)}
-                        >
-                            <View style={styles.radioContainer}>
-                                <View style={[styles.radio, selectedAddressId === item.id && !addNewAddress && styles.radioSelected]} />
-                            </View>
-                            <View style={styles.addressDetails}>
-                                <Text style={styles.addressName}>{item.type || 'Home'}</Text>
-                                <Text style={styles.addressText}>
-                                    {item.address || item.address_line1}, {item.city}
-                                </Text>
-                                <Text style={styles.addressText}>
-                                    {item.state} - {item.zip_code || item.postal_code || item.postCode}
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
+            {/* Address Section */}
+            <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                    <Ionicons name="location-outline" size={20} color="#333" />
+                    <Text style={styles.sectionTitle}>Delivery Address</Text>
                 </View>
-            )}
-
-            {/* Add New Address Toggle */}
-            <TouchableOpacity 
-                style={[styles.addNewToggle, addNewAddress && styles.addressCardSelected]}
-                onPress={() => {
-                    setAddNewAddress(true);
-                    setSelectedAddressId(null);
-                    setAddress(''); // Clear previous selection string
-                }}
-            >
-                <View style={styles.radioContainer}>
-                    <View style={[styles.radio, addNewAddress && styles.radioSelected]} />
-                </View>
-                <Text style={styles.addNewText}>+ Add New Address</Text>
-            </TouchableOpacity>
-
-            {/* New Address Form */}
-            {addNewAddress && (
-                <View style={styles.newAddressForm}>
-                    <View style={styles.row}>
-                         <View style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}>
-                             <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
-                             <TextInput 
-                                 style={styles.input}
-                                 placeholder="First Name"
-                                 placeholderTextColor="#999"
-                                 value={newFirstName}
-                                 onChangeText={setNewFirstName}
-                             />
-                         </View>
-                         <View style={[styles.inputWrapper, { flex: 1 }]}>
-                             <TextInput 
-                                 style={styles.input}
-                                 placeholder="Last Name"
-                                 placeholderTextColor="#999"
-                                 value={newLastName}
-                                 onChangeText={setNewLastName}
-                             />
-                         </View>
+                
+                {savedAddresses.length > 0 && (
+                    <View style={styles.addressList}>
+                        {savedAddresses.map((item) => (
+                            <TouchableOpacity 
+                                key={item.id} 
+                                style={[styles.addressCard, selectedAddressId === item.id && !addNewAddress && styles.addressCardSelected]}
+                                onPress={() => selectAddress(item)}
+                            >
+                                <View style={styles.radioContainer}>
+                                    <View style={[styles.radio, selectedAddressId === item.id && !addNewAddress && styles.radioSelected]} />
+                                </View>
+                                <View style={styles.addressDetails}>
+                                    <Text style={styles.addressName}>{item.type || 'Home'}</Text>
+                                    <Text style={styles.addressText}>
+                                        {item.address || item.address_line1}, {item.city}
+                                    </Text>
+                                    <Text style={styles.addressText}>
+                                        {item.state} - {item.zip_code || item.postal_code || item.postCode}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
                     </View>
-                    <View style={styles.inputWrapper}>
-                        <Ionicons name="location-outline" size={20} color="#666" style={styles.inputIcon} />
-                        <TextInput 
-                            style={styles.input}
-                            placeholder="Address Line (House No, Street)"
-                            placeholderTextColor="#999"
-                            value={newAddressLine}
-                            onChangeText={setNewAddressLine}
-                        />
+                )}
+
+                {/* Add New Address Toggle */}
+                <TouchableOpacity 
+                    style={[styles.addNewToggle, addNewAddress && styles.addressCardSelected]}
+                    onPress={() => {
+                        setAddNewAddress(true);
+                        setSelectedAddressId(null);
+                        setAddress(''); // Clear previous selection string
+                    }}
+                >
+                    <View style={styles.radioContainer}>
+                        <View style={[styles.radio, addNewAddress && styles.radioSelected]} />
                     </View>
+                    <Text style={styles.addNewText}>+ Add New Address</Text>
+                </TouchableOpacity>
 
-                    <View style={styles.row}>
-                        <TouchableOpacity 
-                            style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]} 
-                            onPress={() => openModal('country')}
-                        >
-                             <Text style={[styles.inputText, !newCountry && styles.placeholderText]}>{newCountry || "Country"}</Text>
-                             <Ionicons name="chevron-down" size={16} color="#999" />
-                        </TouchableOpacity>
-                        
-                        <TouchableOpacity 
-                            style={[styles.inputWrapper, { flex: 1 }]}
-                            onPress={() => openModal('state')}
-                        >
-                             <Text style={[styles.inputText, !newState && styles.placeholderText]}>{newState || "State"}</Text>
-                             <Ionicons name="chevron-down" size={16} color="#999" />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.row}>
-                        <TouchableOpacity 
-                            style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
-                            onPress={() => openModal('city')}
-                        >
-                             <Text style={[styles.inputText, !newCity && styles.placeholderText]}>{newCity || "City"}</Text>
-                             <Ionicons name="chevron-down" size={16} color="#999" />
-                        </TouchableOpacity>
-
-                        <View style={[styles.inputWrapper, { flex: 1 }]}>
-                             <TextInput 
+                {/* New Address Form */}
+                {addNewAddress && (
+                    <View style={styles.newAddressForm}>
+                        <View style={styles.row}>
+                             <View style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}>
+                                 <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+                                 <TextInput 
+                                     style={styles.input}
+                                     placeholder="First Name"
+                                     placeholderTextColor="#999"
+                                     value={newFirstName}
+                                     onChangeText={setNewFirstName}
+                                 />
+                             </View>
+                             <View style={[styles.inputWrapper, { flex: 1 }]}>
+                                 <TextInput 
+                                     style={styles.input}
+                                     placeholder="Last Name"
+                                     placeholderTextColor="#999"
+                                     value={newLastName}
+                                     onChangeText={setNewLastName}
+                                 />
+                             </View>
+                        </View>
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="location-outline" size={20} color="#666" style={styles.inputIcon} />
+                            <TextInput 
                                 style={styles.input}
-                                placeholder="Pincode"
+                                placeholder="Address Line (House No, Street)"
                                 placeholderTextColor="#999"
-                                value={newPostCode}
-                                onChangeText={setNewPostCode}
-                                keyboardType="number-pad"
-                             />
+                                value={newAddressLine}
+                                onChangeText={setNewAddressLine}
+                            />
+                        </View>
+
+                        <View style={styles.row}>
+                            <TouchableOpacity 
+                                style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]} 
+                                onPress={() => openModal('country')}
+                            >
+                                 <Text style={[styles.inputText, !newCountry && styles.placeholderText]}>{newCountry || "Country"}</Text>
+                                 <Ionicons name="chevron-down" size={16} color="#999" />
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity 
+                                style={[styles.inputWrapper, { flex: 1 }]}
+                                onPress={() => openModal('state')}
+                            >
+                                 <Text style={[styles.inputText, !newState && styles.placeholderText]}>{newState || "State"}</Text>
+                                 <Ionicons name="chevron-down" size={16} color="#999" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.row}>
+                            <TouchableOpacity 
+                                style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
+                                onPress={() => openModal('city')}
+                            >
+                                 <Text style={[styles.inputText, !newCity && styles.placeholderText]}>{newCity || "City"}</Text>
+                                 <Ionicons name="chevron-down" size={16} color="#999" />
+                            </TouchableOpacity>
+
+                            <View style={[styles.inputWrapper, { flex: 1 }]}>
+                                 <TextInput 
+                                    style={styles.input}
+                                    placeholder="Pincode"
+                                    placeholderTextColor="#999"
+                                    value={newPostCode}
+                                    onChangeText={setNewPostCode}
+                                    keyboardType="number-pad"
+                                 />
+                            </View>
                         </View>
                     </View>
+                )}
+            </View>
+
+            {/* Order Summary */}
+            <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                    <Ionicons name="receipt-outline" size={20} color="#333" />
+                    <Text style={styles.sectionTitle}>Order Summary</Text>
                 </View>
-            )}
-        </View>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Items Total</Text>
+                    <Text style={styles.summaryValue}>₹{totalAmount}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Delivery Fee</Text>
+                    <Text style={styles.freeDelivery}>Free</Text>
+                </View>
+                <View style={styles.divider} />
+                <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Total to Pay</Text>
+                    <Text style={styles.totalValue}>₹{totalAmount}</Text>
+                </View>
+            </View>
 
-        {/* Order Summary */}
-        <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-                <Ionicons name="receipt-outline" size={20} color="#333" />
-                <Text style={styles.sectionTitle}>Order Summary</Text>
-            </View>
-            <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Items Total</Text>
-                <Text style={styles.summaryValue}>₹{totalAmount}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Delivery Fee</Text>
-                <Text style={styles.freeDelivery}>Free</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Total to Pay</Text>
-                <Text style={styles.totalValue}>₹{totalAmount}</Text>
-            </View>
-        </View>
+            {/* Payment Method */}
+            <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                    <Ionicons name="card-outline" size={20} color="#333" />
+                    <Text style={styles.sectionTitle}>Payment Method</Text>
+                </View>
+                
+                <TouchableOpacity 
+                    style={[styles.paymentOption, paymentMethod === 'online' && styles.paymentOptionSelected]}
+                    onPress={() => setPaymentMethod('online')}
+                >
+                    <View style={[styles.radio, paymentMethod === 'online' && styles.radioSelected]} />
+                    <Text style={styles.paymentText}>Credit/Debit Card / UPI</Text>
+                    <Image 
+                        source={{uri: 'https://cdn-icons-png.flaticon.com/512/196/196578.png'}} 
+                        style={{width: 30, height: 30, marginLeft: 'auto', opacity: 0.7}} 
+                        resizeMode="contain"
+                    />
+                </TouchableOpacity>
 
-        {/* Payment Method */}
-        <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-                <Ionicons name="card-outline" size={20} color="#333" />
-                <Text style={styles.sectionTitle}>Payment Method</Text>
+                <TouchableOpacity 
+                    style={[styles.paymentOption, paymentMethod === 'cod' && styles.paymentOptionSelected]}
+                    onPress={() => setPaymentMethod('cod')}
+                >
+                    <View style={[styles.radio, paymentMethod === 'cod' && styles.radioSelected]} />
+                    <Text style={styles.paymentText}>Cash on Delivery</Text>
+                    <Ionicons name="cash-outline" size={24} color="#666" style={{marginLeft: 'auto'}} />
+                </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity 
-                style={[styles.paymentOption, paymentMethod === 'online' && styles.paymentOptionSelected]}
-                onPress={() => setPaymentMethod('online')}
-            >
-                <View style={[styles.radio, paymentMethod === 'online' && styles.radioSelected]} />
-                <Text style={styles.paymentText}>Credit/Debit Card / UPI</Text>
-                <Image 
-                    source={{uri: 'https://cdn-icons-png.flaticon.com/512/196/196578.png'}} 
-                    style={{width: 30, height: 30, marginLeft: 'auto', opacity: 0.7}} 
-                    resizeMode="contain"
-                />
-            </TouchableOpacity>
 
-            <TouchableOpacity 
-                style={[styles.paymentOption, paymentMethod === 'cod' && styles.paymentOptionSelected]}
-                onPress={() => setPaymentMethod('cod')}
-            >
-                <View style={[styles.radio, paymentMethod === 'cod' && styles.radioSelected]} />
-                <Text style={styles.paymentText}>Cash on Delivery</Text>
-                <Ionicons name="cash-outline" size={24} color="#666" style={{marginLeft: 'auto'}} />
-            </TouchableOpacity>
-        </View>
-
-      </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
 
       {/* Pay Button */}
       <View style={styles.footer}>

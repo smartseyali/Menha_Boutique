@@ -157,12 +157,12 @@ class Order {
     }
 
     if (fromDate) {
-      whereConditions.push(`o.created_at::date >= $${paramCount++}`);
+      whereConditions.push(`o.created_at >= $${paramCount++}`);
       values.push(fromDate);
     }
 
     if (toDate) {
-      whereConditions.push(`o.created_at::date <= $${paramCount++}`);
+      whereConditions.push(`o.created_at <= $${paramCount++}`);
       values.push(toDate);
     }
 
@@ -217,12 +217,12 @@ class Order {
     }
   
     if (fromDate) {
-        whereConditions.push(`o.created_at::date >= $${paramCount++}`);
+        whereConditions.push(`o.created_at >= $${paramCount++}`);
         values.push(fromDate);
     }
   
     if (toDate) {
-        whereConditions.push(`o.created_at::date <= $${paramCount++}`);
+        whereConditions.push(`o.created_at <= $${paramCount++}`);
         values.push(toDate);
     }
   

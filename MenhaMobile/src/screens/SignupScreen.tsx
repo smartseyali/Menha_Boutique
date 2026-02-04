@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ImageBackground, StatusBar, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ImageBackground, StatusBar, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import api, { setAuthToken } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -190,136 +190,141 @@ const SignupScreen = ({ route }: any) => {
             colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
             style={styles.overlay}
         >
-            <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
-                <Text style={styles.title}>Create Account</Text>
-                <Text style={styles.subtitle}>Join Menha Boutique</Text>
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
+                    <Text style={styles.title}>Create Account</Text>
+                    <Text style={styles.subtitle}>Join Menha Boutique</Text>
 
-                <View style={styles.inputWrapper}>
-                    <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Full Name"
-                        placeholderTextColor="#999"
-                        value={name}
-                        onChangeText={setName}
-                    />
-                </View>
-
-                <View style={styles.inputWrapper}>
-                    <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Email Address"
-                        placeholderTextColor="#999"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                    />
-                </View>
-
-                <View style={styles.inputWrapper}>
-                    <Ionicons name="call-outline" size={20} color="#666" style={styles.inputIcon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Phone Number"
-                        placeholderTextColor="#999"
-                        value={phoneNumber}
-                        onChangeText={setPhoneNumber}
-                        keyboardType="phone-pad"
-                    />
-                </View>
-
-                <View style={styles.inputWrapper}>
-                    <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Password"
-                        placeholderTextColor="#999"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
-                    />
-                </View>
-
-                {/* Address Section */}
-                <Text style={styles.sectionHeader}>Address Details</Text>
-                
-                <View style={styles.inputWrapper}>
-                    <Ionicons name="location-outline" size={20} color="#666" style={styles.inputIcon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Address Line"
-                        placeholderTextColor="#999"
-                        value={address}
-                        onChangeText={setAddress}
-                    />
-                </View>
-
-                <View style={styles.row}>
-                    <TouchableOpacity 
-                        style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]} 
-                        onPress={() => openModal('country')}
-                    >
-                         <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedCountry && { color: '#999' }]}>
-                             {selectedCountry ? selectedCountry.name : "Country"}
-                         </Text>
-                         <Ionicons name="chevron-down" size={16} color="#999" />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity 
-                        style={[styles.inputWrapper, { flex: 1 }]}
-                        onPress={() => openModal('state')}
-                    >
-                         <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedState && { color: '#999' }]}>
-                             {selectedState ? selectedState.name : "State"}
-                         </Text>
-                         <Ionicons name="chevron-down" size={16} color="#999" />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.row}>
-                    <TouchableOpacity 
-                        style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
-                        onPress={() => openModal('city')}
-                    >
-                         <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedCity && { color: '#999' }]}>
-                             {selectedCity ? selectedCity.name : "City"}
-                         </Text>
-                         <Ionicons name="chevron-down" size={16} color="#999" />
-                    </TouchableOpacity>
-
-                    <View style={[styles.inputWrapper, { flex: 1 }]}>
-                         <TextInput
+                    <View style={styles.inputWrapper}>
+                        <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+                        <TextInput
                             style={styles.input}
-                            placeholder="Pincode"
+                            placeholder="Full Name"
                             placeholderTextColor="#999"
-                            value={postCode}
-                            onChangeText={setPostCode}
-                            keyboardType="number-pad"
+                            value={name}
+                            onChangeText={setName}
                         />
                     </View>
-                </View>
 
-                <TouchableOpacity 
-                    onPress={handleSignup} 
-                    disabled={loading}
-                    style={styles.signupBtnContainer}
-                >
-                    <LinearGradient
-                        colors={['#f59e0b', '#f97316']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.button}
+                    <View style={styles.inputWrapper}>
+                        <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email Address"
+                            placeholderTextColor="#999"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                    </View>
+
+                    <View style={styles.inputWrapper}>
+                        <Ionicons name="call-outline" size={20} color="#666" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Phone Number"
+                            placeholderTextColor="#999"
+                            value={phoneNumber}
+                            onChangeText={setPhoneNumber}
+                            keyboardType="phone-pad"
+                        />
+                    </View>
+
+                    <View style={styles.inputWrapper}>
+                        <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Password"
+                            placeholderTextColor="#999"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                        />
+                    </View>
+
+                    {/* Address Section */}
+                    <Text style={styles.sectionHeader}>Address Details</Text>
+                    
+                    <View style={styles.inputWrapper}>
+                        <Ionicons name="location-outline" size={20} color="#666" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Address Line"
+                            placeholderTextColor="#999"
+                            value={address}
+                            onChangeText={setAddress}
+                        />
+                    </View>
+
+                    <View style={styles.row}>
+                        <TouchableOpacity 
+                            style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]} 
+                            onPress={() => openModal('country')}
+                        >
+                             <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedCountry && { color: '#999' }]}>
+                                 {selectedCountry ? selectedCountry.name : "Country"}
+                             </Text>
+                             <Ionicons name="chevron-down" size={16} color="#999" />
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity 
+                            style={[styles.inputWrapper, { flex: 1 }]}
+                            onPress={() => openModal('state')}
+                        >
+                             <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedState && { color: '#999' }]}>
+                                 {selectedState ? selectedState.name : "State"}
+                             </Text>
+                             <Ionicons name="chevron-down" size={16} color="#999" />
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.row}>
+                        <TouchableOpacity 
+                            style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
+                            onPress={() => openModal('city')}
+                        >
+                             <Text style={[styles.input, { textAlignVertical:'center', paddingTop: 14 }, !selectedCity && { color: '#999' }]}>
+                                 {selectedCity ? selectedCity.name : "City"}
+                             </Text>
+                             <Ionicons name="chevron-down" size={16} color="#999" />
+                        </TouchableOpacity>
+
+                        <View style={[styles.inputWrapper, { flex: 1 }]}>
+                             <TextInput
+                                style={styles.input}
+                                placeholder="Pincode"
+                                placeholderTextColor="#999"
+                                value={postCode}
+                                onChangeText={setPostCode}
+                                keyboardType="number-pad"
+                            />
+                        </View>
+                    </View>
+
+                    <TouchableOpacity 
+                        onPress={handleSignup} 
+                        disabled={loading}
+                        style={styles.signupBtnContainer}
                     >
-                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign Up</Text>}
-                    </LinearGradient>
-                </TouchableOpacity>
+                        <LinearGradient
+                            colors={['#f59e0b', '#f97316']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.button}
+                        >
+                            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign Up</Text>}
+                        </LinearGradient>
+                    </TouchableOpacity>
 
-                <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
-                    <Text style={styles.linkText}>Already have an account? <Text style={styles.linkHighlight}>Login</Text></Text>
-                </TouchableOpacity>
-            </ScrollView>
+                    <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
+                        <Text style={styles.linkText}>Already have an account? <Text style={styles.linkHighlight}>Login</Text></Text>
+                    </TouchableOpacity>
+                </ScrollView>
+            </KeyboardAvoidingView>
 
             {/* Selection Modal */}
             {modalVisible && (

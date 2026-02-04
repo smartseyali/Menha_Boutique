@@ -13,11 +13,6 @@ const Header = () => {
     <View style={styles.mainContainer}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      {/* Announcement Bar */}
-      <View style={styles.announcementBar}>
-        <Text style={styles.announcementText}>World Wide Shipping Available on Request!</Text>
-      </View>
-
       <View style={styles.container}>
         {/* Top Row: Brand, Icons */}
         <View style={styles.topRow}>
@@ -66,19 +61,7 @@ const styles = StyleSheet.create({
   mainContainer: {
     backgroundColor: '#fff',
   },
-  announcementBar: {
-    backgroundColor: '#1a472a', // Deep green
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  announcementText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
+
   container: {
     paddingHorizontal: 15,
     paddingBottom: 10,

@@ -11,6 +11,7 @@ interface OrderItem {
     unit_price: number;
     total_price: number;
     title?: string;
+    sku?: string;
     primary_image?: string;
     product?: {
         title: string;
@@ -196,21 +197,21 @@ const OrdersTab = () => {
                                 {/* Date Range */}
                                 <div className="d-flex align-items-center gap-2">
                                     <Form.Control
-                                        type="date"
+                                        type="datetime-local"
                                         value={fromDate}
                                         onChange={(e) => onFilterChange(setFromDate, e.target.value)}
                                         size="sm"
-                                        title="From Date"
-                                        style={{ width: '130px' }}
+                                        title="From Date & Time"
+                                        style={{ width: '210px' }}
                                     />
                                     <span className="text-muted">-</span>
                                     <Form.Control
-                                        type="date"
+                                        type="datetime-local"
                                         value={toDate}
                                         onChange={(e) => onFilterChange(setToDate, e.target.value)}
                                         size="sm"
-                                        title="To Date"
-                                        style={{ width: '130px' }}
+                                        title="To Date & Time"
+                                        style={{ width: '210px' }}
                                     />
                                 </div>
 
@@ -465,7 +466,14 @@ const OrdersTab = () => {
                                     {selectedOrder.items && selectedOrder.items.length > 0 ? (
                                         selectedOrder.items.map((item) => (
                                             <tr key={item.id}>
-                                                <td>{item.title || item.product?.title || 'Product'}</td>
+                                                <td>
+                                                    {item.title || item.product?.title || 'Product'}
+                                                    {(item.sku || (item.product as any)?.sku) && (
+                                                        <span className="text-muted ms-1 small">
+                                                            ({item.sku || (item.product as any)?.sku})
+                                                        </span>
+                                                    )}
+                                                </td>
                                                 <td>{item.quantity}</td>
                                                 <td>₹{formatPrice(item.unit_price)}</td>
                                                 <td>₹{formatPrice(item.total_price)}</td>

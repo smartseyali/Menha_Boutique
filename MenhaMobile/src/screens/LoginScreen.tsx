@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ImageBackground, Image, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ImageBackground, Image, StatusBar, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import api, { setAuthToken } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -68,53 +68,64 @@ const LoginScreen = ({ route }: any) => {
             colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
             style={styles.overlay}
         >
-            <View style={styles.formContainer}>
-                <Text style={styles.title}>Menha Boutique</Text>
-                <Text style={styles.subtitle}>Welcome Back!</Text>
-
-                <View style={styles.inputWrapper}>
-                    <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Email or Phone Number"
-                        placeholderTextColor="#999"
-                        value={identifier}
-                        onChangeText={setIdentifier}
-                        autoCapitalize="none"
-                    />
-                </View>
-
-                <View style={styles.inputWrapper}>
-                    <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Password"
-                        placeholderTextColor="#999"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
-                    />
-                </View>
-
-                <TouchableOpacity 
-                    onPress={handleLogin} 
-                    disabled={loading}
-                    style={styles.loginBtnContainer}
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <ScrollView 
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
                 >
-                    <LinearGradient
-                        colors={THEME.gradients.primary as any}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.button}
-                    >
-                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign In</Text>}
-                    </LinearGradient>
-                </TouchableOpacity>
+                    <View style={styles.formContainer}>
+                        <Text style={styles.title}>Menha Boutique</Text>
+                        <Text style={styles.subtitle}>Welcome Back!</Text>
 
-                <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Signup')}>
-                    <Text style={styles.linkText}>Don't have an account? <Text style={styles.linkHighlight}>Sign Up</Text></Text>
-                </TouchableOpacity>
-            </View>
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Email or Phone Number"
+                                placeholderTextColor="#999"
+                                value={identifier}
+                                onChangeText={setIdentifier}
+                                autoCapitalize="none"
+                            />
+                        </View>
+
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Password"
+                                placeholderTextColor="#999"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                            />
+                        </View>
+
+                        <TouchableOpacity 
+                            onPress={handleLogin} 
+                            disabled={loading}
+                            style={styles.loginBtnContainer}
+                        >
+                            <LinearGradient
+                                colors={THEME.gradients.primary as any}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.button}
+                            >
+                                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign In</Text>}
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Signup')}>
+                            <Text style={styles.linkText}>Don't have an account? <Text style={styles.linkHighlight}>Sign Up</Text></Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </LinearGradient>
       </ImageBackground>
     </View>
