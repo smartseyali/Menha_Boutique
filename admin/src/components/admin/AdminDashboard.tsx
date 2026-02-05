@@ -8,6 +8,7 @@ import OrdersTab from './OrdersTab';
 import UsersTab from './UsersTab';
 import DeliveryTab from './DeliveryTab';
 import BannersTab from './BannersTab';
+import PaymentSettingsTab from './PaymentSettingsTab';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -63,6 +64,11 @@ const AdminDashboard = () => {
                                     <i className="ri-image-line me-2"></i> Banners & Videos
                                 </Nav.Link>
                             </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link eventKey="payment" className="px-3 py-2 d-flex align-items-center">
+                                    <i className="ri-bank-card-line me-2"></i> Payment Settings
+                                </Nav.Link>
+                            </Nav.Item>
                         </Nav>
 
                         <Tab.Content>
@@ -86,6 +92,9 @@ const AdminDashboard = () => {
                             </Tab.Pane>
                             <Tab.Pane eventKey="banners">
                                 <BannersTab />
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="payment">
+                                <PaymentSettingsTab />
                             </Tab.Pane>
                         </Tab.Content>
                     </Tab.Container>

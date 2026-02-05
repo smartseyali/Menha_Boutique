@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, SafeAreaView, StatusBar, ActivityIndicator, Image, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, SafeAreaView, StatusBar, ActivityIndicator, Image, Modal, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -116,6 +116,21 @@ const CheckoutScreen = () => {
       return [];
   };
 
+  // Payment Gateway State
+  const [activeGateway, setActiveGateway] = useState<any>(null);
+
+  const fetchActiveGateway = async () => {
+    try {
+        const res = await api.get('/payments/active-gateway');
+        if (res.data && res.data.success) {
+            setActiveGateway(res.data.gateway);
+            setPaymentMethod('online');
+        }
+    } catch (error) {
+        console.log('Error fetching active gateway', error);
+    }
+  };
+
   // Checkout State
   const [address, setAddress] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -184,15 +199,42 @@ const CheckoutScreen = () => {
             total: totalAmount 
         };
         
+        
         const response = await api.post('/orders', orderPayload);
         
         setIsProcessing(false);
         if (response.status === 201) {
-             // Success
-             await updateCartCount(); // Refresh context
-             Alert.alert('Success', 'Order placed successfully!', [
-                { text: 'OK', onPress: () => navigation.navigate('Orders') }
-             ]);
+             const { order, requiresPayment, paymentLink } = response.data;
+             
+             if (requiresPayment && paymentLink) {
+                 // Open Payment Link
+                 Alert.alert(
+                     'Payment Required', 
+                     'You will be redirected to the payment gateway to complete your transaction.',
+                     [
+                         { 
+                             text: 'Proceed to Pay', 
+                             onPress: async () => {
+                                 const supported = await Linking.canOpenURL(paymentLink);
+                                 if (supported) {
+                                     await Linking.openURL(paymentLink);
+                                     // Navigate to Orders so they see it when they return
+                                     await updateCartCount();
+                                     navigation.navigate('Orders');
+                                 } else {
+                                     Alert.alert('Error', 'Cannot open payment link');
+                                 }
+                             }
+                         }
+                     ]
+                 );
+             } else {
+                 // COD or no payment required immediatley
+                 await updateCartCount(); 
+                 Alert.alert('Success', 'Order placed successfully!', [
+                    { text: 'OK', onPress: () => navigation.navigate('Orders') }
+                 ]);
+             }
         }
     } catch (error: any) {
         console.error(error);
@@ -219,6 +261,7 @@ const CheckoutScreen = () => {
     fetchAddresses();
     fetchCountries();
     fetchProfile();
+    fetchActiveGateway();
   }, []);
 
   const fetchAddresses = async () => {
@@ -435,7 +478,10 @@ const CheckoutScreen = () => {
                     onPress={() => setPaymentMethod('online')}
                 >
                     <View style={[styles.radio, paymentMethod === 'online' && styles.radioSelected]} />
-                    <Text style={styles.paymentText}>Credit/Debit Card / UPI</Text>
+                    <Text style={styles.paymentText}>
+                        {activeGateway ? `${activeGateway.name.charAt(0).toUpperCase() + activeGateway.name.slice(1)}` : 'Online Payment'}
+                    </Text>
+                    {/* Display icons based on gateway or generic */}
                     <Image 
                         source={{uri: 'https://cdn-icons-png.flaticon.com/512/196/196578.png'}} 
                         style={{width: 30, height: 30, marginLeft: 'auto', opacity: 0.7}} 
@@ -443,14 +489,7 @@ const CheckoutScreen = () => {
                     />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={[styles.paymentOption, paymentMethod === 'cod' && styles.paymentOptionSelected]}
-                    onPress={() => setPaymentMethod('cod')}
-                >
-                    <View style={[styles.radio, paymentMethod === 'cod' && styles.radioSelected]} />
-                    <Text style={styles.paymentText}>Cash on Delivery</Text>
-                    <Ionicons name="cash-outline" size={24} color="#666" style={{marginLeft: 'auto'}} />
-                </TouchableOpacity>
+
             </View>
 
           </ScrollView>

@@ -4,6 +4,7 @@ const Cart = require('../models/Cart');
 const Coupon = require('../models/Coupon');
 const paymentService = require('../services/paymentService');
 const { sendOrderConfirmation, sendOrderStatusUpdate } = require('../services/emailService');
+const PaymentGateway = require('../models/PaymentGateway');
 
 async function getUserOrders(req, res, next) {
   try {
@@ -172,39 +173,96 @@ async function createOrder(req, res, next) {
     // Get order with items
     order.items = await OrderItem.findByOrderId(order.id);
 
-    // Generate Razorpay Payment Link if method is razorpay
-    if (paymentMethod === 'razorpay') {
-      try {
-        // Try to get customer phone from request body if available (guest checkout usually passes phone)
-        // Or from user object if logged in
-        const customerPhone = req.body.phone || req.body.mobile || (req.user ? req.user.mobile : undefined);
-        const customerName = req.body.name || (req.user ? `${req.user.firstName} ${req.user.lastName}` : 'Customer');
+    // Generate Payment Link
+    let requiresPayment = false;
+    let paymentLink = null;
 
-        const paymentLinkResult = await paymentService.createRazorpayPaymentLink({
-          amount: order.total_price || order.totalPrice,
-          currency: 'INR',
-          description: `Payment for Order #${order.order_number || order.id}`,
-          customer: {
-            name: customerName,
-            contact: customerPhone
-          },
-          callbackUrl: `${process.env.CORS_ORIGIN || 'https://pattikadai.com'}/my-orders`,
-          reference_id: order.order_number,
-          notes: {
-            order_id: order.id,
-            user_id: req.userId || ''
-          }
-        });
+    if (paymentMethod !== 'cod') {
+        try {
+            const activeGateway = await PaymentGateway.findOne({ isActive: true });
+            
+            if (activeGateway) {
+                requiresPayment = true;
+                const customerPhone = req.body.phone || req.body.mobile || (req.user ? req.user.mobile : undefined);
+                const customerName = req.body.name || (req.user ? `${req.user.firstName} ${req.user.lastName}` : 'Customer');
+                
+                if (activeGateway.name === 'razorpay') {
+                    const paymentLinkResult = await paymentService.createRazorpayPaymentLink({
+                        amount: order.total_price || order.totalPrice,
+                        currency: 'INR',
+                        description: `Payment for Order #${order.order_number || order.id}`,
+                        customer: { name: customerName, contact: customerPhone },
+                        callbackUrl: `${process.env.CORS_ORIGIN || 'https://pattikadai.com'}/my-orders`,
+                        reference_id: order.order_number,
+                        notes: { order_id: order.id, user_id: req.userId || '' }
+                    }, activeGateway.credentials);
+                    
+                    if (paymentLinkResult && paymentLinkResult.short_url) {
+                         paymentLink = paymentLinkResult.short_url;
+                    }
+                } else if (activeGateway.name === 'phonepe') {
+                     // PhonePe Pay Page
+                     const merchantTransactionId = `TXN${Date.now()}${Math.floor(Math.random()*1000)}`;
+                     const paymentResult = await paymentService.createPhonePePayment({
+                        amount: order.total_price || order.totalPrice,
+                        merchantTransactionId: merchantTransactionId,
+                        callbackUrl: `${process.env.CORS_ORIGIN || 'https://pattikadai.com'}/payment/success`, // Needs to be handled by frontend/backend
+                        mobileNumber: customerPhone,
+                        merchantUserId: req.userId
+                     }, activeGateway.credentials);
 
-        if (paymentLinkResult && paymentLinkResult.short_url) {
-          order.paymentLink = paymentLinkResult.short_url;
-          // Persist payment link to database
-          await Order.updatePaymentLink(order.id, order.paymentLink);
+                     if (paymentResult && paymentResult.redirectUrl) {
+                         paymentLink = paymentResult.redirectUrl;
+                         // Store transaction ID
+                         await Order.updatePaymentInfo(order.id, { 
+                             payment_gateway: 'phonepe',
+                             payment_transaction_id: merchantTransactionId 
+                         });
+                     }
+                } else if (activeGateway.name === 'cashfree') {
+                     const paymentResult = await paymentService.createCashfreePayment({
+                        amount: order.total_price || order.totalPrice,
+                        orderId: `ORDER_${order.order_number}`, // Cashfree requires specific format sometimes
+                        customerDate: Date.now(),
+                        mobileNumber: customerPhone,
+                        callbackUrl: `${process.env.CORS_ORIGIN || 'https://pattikadai.com'}/payment/callback/cashfree`,
+                        email: orderEmail,
+                        merchantUserId: req.userId
+                     }, activeGateway.credentials);
+                     
+                     if (paymentResult && paymentResult.redirectUrl) {
+                        paymentLink = paymentResult.redirectUrl;
+                        await Order.updatePaymentInfo(order.id, { payment_gateway: 'cashfree' });
+                     } else if (paymentResult && paymentResult.paymentSessionId) {
+                        // If it returns session ID, we might need to construct link or handle in frontend. 
+                        // For now, let's assume redirectUrl is populated by our service if feasible.
+                     }
+                } else if (activeGateway.name === 'paytm') {
+                     // Placeholder until SDK
+                     console.log('Paytm is active but requires SDK implementation');
+                } else if (activeGateway.name === 'instamojo') {
+                     const paymentResult = await paymentService.createInstamojoPayment({
+                        amount: order.total_price || order.totalPrice,
+                        orderId: order.order_number,
+                        customer: { name: customerName },
+                        email: orderEmail,
+                        mobileNumber: customerPhone,
+                        callbackUrl: `${process.env.CORS_ORIGIN || 'https://pattikadai.com'}/payment/callback/instamojo`
+                     }, activeGateway.credentials);
+                     if (paymentResult && paymentResult.redirectUrl) {
+                        paymentLink = paymentResult.redirectUrl;
+                        await Order.updatePaymentInfo(order.id, { payment_gateway: 'instamojo' });
+                     }
+                }
+                
+                if (paymentLink) {
+                   order.paymentLink = paymentLink;
+                   await Order.updatePaymentLink(order.id, order.paymentLink);
+                }
+            }
+        } catch (plError) {
+             console.error('Failed to generate payment link:', plError);
         }
-      } catch (plError) {
-        console.error('Failed to generate payment link for email:', plError);
-        // Continue without link
-      }
     }
 
     // Send order confirmation email
@@ -216,7 +274,8 @@ async function createOrder(req, res, next) {
     res.status(201).json({
       message: 'Order created successfully',
       order,
-      requiresPayment: paymentMethod === 'razorpay' || paymentMethod === 'phonepe',
+      requiresPayment,
+      paymentLink
     });
   } catch (error) {
     next(error);

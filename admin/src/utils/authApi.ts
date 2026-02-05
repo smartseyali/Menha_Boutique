@@ -80,4 +80,28 @@ export const authApi = {
       throw error;
     }
   },
+
+  // Payment Gateways
+  getPaymentGateways: async () => {
+    const response = await apiRequest('/api/payments/gateways');
+    return response.gateways || response;
+  },
+
+  createPaymentGateway: async (data: any) => {
+    return apiRequest('/api/payments/gateways', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updatePaymentGateway: async (id: string, data: any) => {
+    return apiRequest(`/api/payments/gateways/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  fetchActiveGateway: async () => {
+    return apiRequest('/api/payments/active-gateway');
+  }
 };
