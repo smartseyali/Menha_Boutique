@@ -24,7 +24,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           # Path on the server where you want to deploy the files
           # Usually public_html for the main domain or public_html/subdomain for subdomains
-          server-dir: ./public_html/
+          server-dir: ./
           # Local directory to upload (the PHP app folder)
           local-dir: ./menha-web-php/
           # Provide the strict deployment mode to delete files not present in the new version
