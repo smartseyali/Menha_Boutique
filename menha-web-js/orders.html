@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - My Orders</title>
+    <link rel="icon" href="data:,">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .order-card {
+            background: var(--color-white);
+            border-radius: 18px;
+            box-shadow: var(--shadow-sm);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--color-border);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: capitalize;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-shipped {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-delivered {
+            background: rgba(0, 77, 64, 0.1);
+            color: var(--color-primary);
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .order-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px dashed var(--color-border);
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .order-item-img {
+            width: 80px;
+            height: 80px;
+            background: #f4f4f4;
+            border-radius: 12px;
+            padding: 5px;
+            flex-shrink: 0;
+        }
+
+        .order-item-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header" id="header" style="box-shadow: none; border-bottom: 1px solid var(--color-border);">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="index.html" class="action-btn"><i data-lucide="arrow-left"></i></a>
+                <div class="brand">
+                    <div class="brand-text">My Orders</div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <a href="cart.html" class="action-btn" style="position: relative;">
+                    <i data-lucide="shopping-cart"></i>
+                    <span class="badge" id="cart-badge" style="display:none;">0</span>
+                </a>
+                <a href="login.html" class="action-btn" title="Profile"><i data-lucide="user"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content container section-padding" style="min-height: 70vh; max-width: 900px;">
+        <h2 style="color: var(--color-primary-dark); margin-bottom: 2rem;">Order History</h2>
+        <div id="orders-workspace">
+            <div style="text-align: center; padding: 4rem 1rem;">
+                <p style="color: var(--color-text-light);">Loading orders...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-block footer-brand">
+                    <div class="brand-text">Menha</div>
+                    <p>Elevate your style with our premium collection of curated fashion. Experience modern boutique
+                        shopping.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; <span id="current-year"></span> Menha Boutique. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+
+            if (!MainAPI.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const workspace = document.getElementById('orders-workspace');
+
+            try {
+                const orders = await MainAPI.getOrders();
+
+                if (orders.length === 0) {
+                    workspace.innerHTML = `
+                        <div style="text-align:center; padding: 4rem 1rem;">
+                            <i data-lucide="package" style="width: 60px; height: 60px; color: var(--color-border); margin-bottom: 1rem;"></i>
+                            <h2 style="color: var(--color-primary-dark); margin-bottom: 0.5rem;">No Orders Found</h2>
+                            <p style="color: var(--color-text-light); margin-bottom: 2rem;">You haven't placed any orders yet.</p>
+                            <a href="index.html" style="background: var(--color-primary); color: white; padding: 12px 30px; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                                <i data-lucide="arrow-right"></i> Start Shopping
+                            </a>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                let html = '';
+                orders.forEach(o => {
+                    const date = new Date(o.created_at || o.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    let statusClass = 'status-pending';
+                    const s = (o.order_status || o.status || 'pending').toLowerCase();
+
+                    if (s === 'processing' || s === 'confirmed') statusClass = 'status-processing';
+                    if (s === 'shipped') statusClass = 'status-shipped';
+                    if (s === 'delivered') statusClass = 'status-delivered';
+                    if (s === 'cancelled' || s === 'failed') statusClass = 'status-cancelled';
+
+                    // If items are populated as an array object
+                    let itemsHtml = '';
+                    if (o.items && Array.isArray(o.items)) {
+                        o.items.forEach(item => {
+                            const img = MainAPI.getProductImage(item.Product || item.product || {});
+                            const title = (item.Product || item.product || {}).title || 'Product';
+                            const q = item.quantity || 1;
+                            const price = item.price || 0;
+
+                            itemsHtml += `
+                                <div class="order-item">
+                                    <div class="order-item-img">
+                                        <img src="${img}" alt="${title}">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <h4 style="margin: 0 0 0.25rem 0; color: var(--color-primary-dark);">${title}</h4>
+                                        <div style="color: var(--color-text-light); font-size: 0.9rem;">Qty: ${q}</div>
+                                    </div>
+                                    <div style="font-weight: 600; color: var(--color-primary-dark);">₹${price * q}</div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    html += `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div>
+                                    <div style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 0.25rem;">Order #${o.order_number || o.id.substring(0, 8)}</div>
+                                    <div style="font-weight: 600; color: var(--color-primary-dark); font-size: 1.1rem;">Placed on ${date}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="status-badge ${statusClass}">
+                                        ${s}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 1.5rem;">
+                                ${itemsHtml || '<p style="color: var(--color-text-light); font-style: italic;">No items found in this order payload.</p>'}
+                            </div>
+
+                            <div style="border-top: 1px solid var(--color-border); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 0.25rem;">Total Amount</div>
+                                    <div style="font-weight: 800; color: var(--color-primary); font-size: 1.3rem;">₹${o.total_amount || 0}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 0.25rem;">Payment By</div>
+                                    <div style="font-weight: 600; color: var(--color-primary-dark); text-transform: uppercase;">${o.payment_method || 'COD'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                workspace.innerHTML = html;
+                lucide.createIcons();
+
+            } catch (err) {
+                console.error(err);
+                workspace.innerHTML = `<div style="text-align:center; padding: 2rem; color: red;">Failed to load orders. Please try again later.</div>`;
+            }
+        });
+    </script>
+</body>
+
+</html>

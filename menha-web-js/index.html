@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - Shopping</title>
+    <link rel="icon" href="data:,">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="container header-container">
+            <div class="header-left">
+                <button class="menu-btn"><i data-lucide="menu"></i></button>
+                <a href="index.html" class="brand">
+                    <div class="brand-text">Menha</div>
+                </a>
+            </div>
+
+            <div class="header-right">
+                <a href="categories.html" class="action-btn tooltip" title="Categories"><i data-lucide="grid"></i></a>
+                <a href="login.html" class="action-btn tooltip" title="Profile"><i data-lucide="user"></i></a>
+                <div class="cart-container">
+                    <a href="cart.html" class="action-btn" id="cart-btn">
+                        <i data-lucide="shopping-bag"></i>
+                        <span class="badge" id="cart-badge">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+
+        <!-- Banners Section -->
+        <section class="banner-section">
+            <div class="container">
+                <div class="banner-carousel" id="banner-container">
+                    <!-- Banners will be injected here -->
+                    <div class="loading-shimmer" style="height: 100%; border-radius: 16px;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="category-section section-padding">
+            <div class="container">
+                <h2 class="section-title">Popular Categories</h2>
+                <div class="category-scroll" id="category-container">
+                    <!-- Categories will be injected here -->
+                    <div class="loading-shimmer"
+                        style="width: 80px; height: 80px; border-radius: 50%; display: inline-block; margin-right: 15px;">
+                    </div>
+                    <div class="loading-shimmer"
+                        style="width: 80px; height: 80px; border-radius: 50%; display: inline-block; margin-right: 15px;">
+                    </div>
+                    <div class="loading-shimmer"
+                        style="width: 80px; height: 80px; border-radius: 50%; display: inline-block; margin-right: 15px;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trending Products Section -->
+        <section class="products-section section-padding">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">All Items</h2>
+                    <a href="categories.html" class="view-all-btn">View All</a>
+                </div>
+                <div class="product-grid" id="product-container">
+                    <!-- Products will be injected here -->
+                    <div class="loading-shimmer" style="height: 250px; border-radius: 18px;"></div>
+                    <div class="loading-shimmer" style="height: 250px; border-radius: 18px;"></div>
+                    <div class="loading-shimmer" style="height: 250px; border-radius: 18px;"></div>
+                    <div class="loading-shimmer" style="height: 250px; border-radius: 18px;"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-block footer-brand">
+                    <div class="brand-text">Menha</div>
+                    <p>Elevate your style with our premium collection of curated fashion. Experience modern boutique
+                        shopping.</p>
+                    <div class="social-links">
+                        <a href="javascript:void(0)" class="social-link" title="Facebook"><i
+                                data-lucide="facebook"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Instagram"><i
+                                data-lucide="instagram"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Twitter"><i
+                                data-lucide="twitter"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="categories.html">Categories</a></li>
+                        <li><a href="index.html">Products</a></li>
+                        <li><a href="cart.html">Shopping Cart</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="javascript:void(0)">Contact Us</a></li>
+                        <li><a href="javascript:void(0)">Shipping Policy</a></li>
+                        <li><a href="javascript:void(0)">Returns & Exchanges</a></li>
+                        <li><a href="javascript:void(0)">FAQs</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Contact Info</h3>
+                    <ul class="footer-links">
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001</li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900</li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                &copy; <span id="current-year"></span> Menha Boutique. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+
+    <!-- Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+
+</html>

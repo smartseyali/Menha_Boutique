@@ -1,7 +1,7 @@
 
 <?php
 $pageTitle = 'Login';
-include 'includes/header.php';
+include __DIR__ . '/includes/header.php';
 ?>
 
 <div class="auth-container">
@@ -67,4 +67,4 @@ include 'includes/header.php';
     });
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php include __DIR__ . '/includes/footer.php'; ?>

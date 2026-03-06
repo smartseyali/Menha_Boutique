@@ -1,7 +1,7 @@
 
 <?php
 $pageTitle = 'Shopping Cart';
-include 'includes/header.php';
+include __DIR__ . '/includes/header.php';
 ?>
 
 <div class="cart-page section">
@@ -126,24 +126,26 @@ include 'includes/header.php';
             total += itemTotal;
             
             html += `
-            <div class="cart-item" style="display:flex; gap:1.5rem; margin-bottom:1.5rem; padding:1rem; border:1px solid #eee; border-radius:8px;">
-                <div style="width:80px; height:80px;">
-                    <img src="${image}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;" alt="${product.name}">
+            <div class="cart-item" style="display:flex; gap:1.5rem; margin-bottom:1.5rem; padding:1.5rem; background: var(--color-white); border-radius:18px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);">
+                <div style="width:100px; height:100px; background: #f4f4f4; border-radius: 12px; overflow: hidden;">
+                    <img src="${image}" style="width:100%; height:100%; object-fit:cover;" alt="${product.name}">
                 </div>
                 <div style="flex:1;">
-                    <h4 style="margin:0 0 0.5rem 0;">${product.name}</h4>
-                    <p style="margin:0; color:#666;">${formatPrice(price)}</p>
+                    <h3 style="margin:0 0 0.5rem 0; color: var(--color-primary-dark);">${product.name}</h3>
+                    <p style="margin:0; font-weight: 800; color: var(--color-primary);">${formatPrice(price)}</p>
                     
-                    <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
-                         <button style="padding:2px 8px;" onclick="updateCartItem('${item.id || item.productId}', -1, ${!!token})">-</button>
-                         <span>${qty}</span>
-                         <button style="padding:2px 8px;" onclick="updateCartItem('${item.id || item.productId}', 1, ${!!token})">+</button>
-                         <button style="margin-left:auto; color:red; background:none; border:none;" onclick="removeCartItem('${item.id || item.productId}', ${!!token})">
+                    <div style="display:flex; align-items:center; justify-content: space-between; margin-top:1rem;">
+                        <div style="display: flex; gap: 10px; align-items: center; background: var(--color-light-gray); padding: 5px 15px; border-radius: 12px;">
+                             <button style="border:none;background:none;font-size:1.2rem; cursor:pointer; color: var(--color-primary); width: 20px; text-align: center; font-weight: 600;" onclick="updateCartItem('${item.id || item.productId}', -1, ${!!token})">-</button>
+                             <span style="font-weight: bold; width: 20px; text-align: center;">${qty}</span>
+                             <button style="border:none;background:none;font-size:1.2rem; cursor:pointer; color: var(--color-primary); width: 20px; text-align: center; font-weight: 600;" onclick="updateCartItem('${item.id || item.productId}', 1, ${!!token})">+</button>
+                        </div>
+                        <button style="color:var(--color-accent); background:none; border:none; cursor:pointer;" onclick="removeCartItem('${item.id || item.productId}', ${!!token})">
                             <i data-lucide="trash-2"></i>
-                         </button>
+                        </button>
                     </div>
                 </div>
-                <div style="font-weight:bold;">
+                <div style="font-weight:bold; font-size: 1.2rem; color: var(--color-primary-dark);">
                     ${formatPrice(itemTotal)}
                 </div>
             </div>`;
@@ -169,4 +171,4 @@ include 'includes/header.php';
     }
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php include __DIR__ . '/includes/footer.php'; ?>

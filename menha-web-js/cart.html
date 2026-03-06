@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - Shopping Cart</title>
+    <link rel="icon" href="data:,">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <header class="header" id="header" style="box-shadow: none; border-bottom: 1px solid var(--color-border);">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="index.html" class="action-btn"><i data-lucide="arrow-left"></i></a>
+                <div class="brand">
+                    <div class="brand-text">My Cart</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content container section-padding" style="min-height: 70vh;">
+        <h2 style="color: var(--color-primary-dark); margin-bottom: 2rem;">Order Summary</h2>
+
+        <div id="cart-workspace">
+            <!-- Dynamic Content -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-block footer-brand">
+                    <div class="brand-text">Menha</div>
+                    <p>Elevate your style with our premium collection of curated fashion. Experience modern boutique
+                        shopping.</p>
+                    <div class="social-links">
+                        <a href="javascript:void(0)" class="social-link" title="Facebook"><i
+                                data-lucide="facebook"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Instagram"><i
+                                data-lucide="instagram"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Twitter"><i
+                                data-lucide="twitter"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="categories.html">Categories</a></li>
+                        <li><a href="index.html">Products</a></li>
+                        <li><a href="cart.html">Shopping Cart</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="javascript:void(0)">Contact Us</a></li>
+                        <li><a href="javascript:void(0)">Shipping Policy</a></li>
+                        <li><a href="javascript:void(0)">Returns & Exchanges</a></li>
+                        <li><a href="javascript:void(0)">FAQs</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Contact Info</h3>
+                    <ul class="footer-links">
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001
+                        </li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900
+                        </li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                &copy; <span id="current-year"></span> Menha Boutique. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        let activeGateway = null;
+        let checkoutState = "Tamil Nadu"; // Default placeholder
+        let isCartLoading = false;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            activeGateway = await MainAPI.getActiveGateway();
+            await renderCart();
+            window.addEventListener('cartUpdated', renderCart);
+        });
+
+        async function renderCart() {
+            if (isCartLoading) return;
+            isCartLoading = true;
+
+            const workspace = document.getElementById('cart-workspace');
+            const cartItems = CartManager.getCart();
+
+            if (cartItems.length === 0) {
+                workspace.innerHTML = `
+                    <div id="empty-cart-msg" style="text-align:center; padding: 4rem 1rem;">
+                        <i data-lucide="shopping-cart" style="width: 60px; height: 60px; color: var(--color-border); margin-bottom: 1rem;"></i>
+                        <h2 style="color: var(--color-primary-dark); margin-bottom: 0.5rem;">Your Cart is Empty</h2>
+                        <a href="index.html" style="background: var(--color-primary); color: white; padding: 12px 30px; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; margin-top: 1rem;">
+                            <i data-lucide="arrow-right"></i> Start Shopping
+                        </a>
+                    </div>
+                `;
+                lucide.createIcons();
+                isCartLoading = false;
+                return;
+            }
+
+            // Show a small loader or just wait synchronously for API
+            workspace.style.opacity = '0.5';
+
+            const currentDeliveryCharge = await MainAPI.calculateDeliveryCharge(checkoutState, cartItems);
+
+            let html = '<div style="display: grid; grid-template-columns: 1fr; gap: 2rem; align-items: start;">';
+            html += '<div class="cart-items-list">';
+
+            // Render Items
+            cartItems.forEach(item => {
+                const img = MainAPI.getProductImage(item.product);
+                const title = item.product.title || item.product.name;
+                const price = MainAPI.getProductPrice(item.product);
+                const weight = item.product.weight || item.product.unit || '';
+
+                html += `
+                    <div style="display:flex; gap:1.5rem; margin-bottom:1.5rem; padding:1.5rem; background: var(--color-white); border-radius:18px; box-shadow: var(--shadow-sm);">
+                        <div style="width:80px; height:80px; background: #f4f4f4; border-radius: 12px; overflow: hidden; padding: 5px;">
+                            <img src="${img}" style="width:100%; height:100%; object-fit:contain;" alt="${title}">
+                        </div>
+                        <div style="flex:1;">
+                            <h3 style="margin:0 0 0.25rem 0; color: var(--color-primary-dark); font-size: 1.1rem;">${title}</h3>
+                            <span style="font-size: 0.85rem; color: var(--color-text-light);">${weight}</span>
+                            <p style="margin:0; font-weight: 700; color: var(--color-primary); margin-top: 0.25rem;">₹${price}</p>
+                            
+                            <div style="display:flex; align-items:center; justify-content: space-between; margin-top:1rem;">
+                                <div style="display: flex; gap: 10px; align-items: center; background: var(--color-light-gray); padding: 5px 15px; border-radius: 12px;">
+                                     <button style="border:none;background:none;font-size:1.2rem; cursor:pointer; color: var(--color-primary); font-weight: 600;" onclick="CartManager.update('${item.product.id}', ${item.quantity - 1})">-</button>
+                                     <span style="font-weight: bold; width: 20px; text-align: center;">${item.quantity}</span>
+                                     <button style="border:none;background:none;font-size:1.2rem; cursor:pointer; color: var(--color-primary); font-weight: 600;" onclick="CartManager.update('${item.product.id}', ${item.quantity + 1})">+</button>
+                                </div>
+                                <button style="color:var(--color-accent); background:none; border:none; cursor:pointer;" onclick="CartManager.remove('${item.product.id}')">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            // Order Form & Summary
+            const cartTotal = CartManager.getTotalPrice();
+            const totalPayable = cartTotal + currentDeliveryCharge;
+            const gatewayNameDisplay = activeGateway ? activeGateway.name.toUpperCase() : 'COD';
+            const deliveryDisp = currentDeliveryCharge > 0 ? `₹${currentDeliveryCharge}` : 'Free';
+
+            const user = MainAPI.getUser();
+            const isLoggedIn = MainAPI.isAuthenticated();
+
+            let addresses = [];
+            if (isLoggedIn) {
+                addresses = await MainAPI.getUserAddresses();
+                if (addresses.length > 0) {
+                    checkoutState = addresses[0].state_name || addresses[0].state || checkoutState;
+                }
+            }
+
+            let htmlAddressOptions = '';
+            if (addresses.length > 0) {
+                htmlAddressOptions = `
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--color-primary-dark); margin-bottom: 0.5rem;">Select Shipping Address</label>
+                        <select id="cust-address-select" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--color-border); font-family: inherit;">
+                            ${addresses.map(a => `<option value="${a.id}">${a.first_name || ''} ${a.last_name || ''}, ${a.address_line}, ${a.city}, ${a.state_name || a.state} - ${a.postal_code}</option>`).join('')}
+                            <option value="NEW">+ Add New Address</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div style="background: var(--color-white); padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-sm);">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary-dark);">Checkout Details</h3>
+            `;
+
+            if (!isLoggedIn) {
+                html += `
+                    <div style="text-align: center; padding: 2rem 1rem; border: 1px dashed var(--color-border); border-radius: 12px; background: rgba(0,0,0,0.02);">
+                        <i data-lucide="user-plus" style="width: 40px; height: 40px; color: var(--color-border); margin-bottom: 1rem;"></i>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--color-primary-dark);">Sign in to Checkout</h4>
+                        <p style="color: var(--color-text-light); margin-bottom: 1.5rem; font-size: 0.9rem;">Please sign in or create an account to securely place your order and track its status.</p>
+                        <a href="login.html" style="background: var(--color-primary); color: white; padding: 12px 30px; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                            Sign In
+                        </a>
+                    </div>
+                </div>
+                `;
+            } else {
+                html += `
+                    <form id="checkout-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                        ${htmlAddressOptions}
+
+                        <div id="new-address-blocks" style="${addresses.length > 0 ? 'display:none;' : ''} display: flex; flex-direction: column; gap: 1rem;">
+                            <input type="text" id="cust-state" value="${checkoutState}" placeholder="State (e.g. Tamil Nadu)" ${addresses.length > 0 ? '' : 'required'} style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--color-border); font-family: inherit;">
+                            <textarea id="cust-address" placeholder="Shipping Address" ${addresses.length > 0 ? '' : 'required'} style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--color-border); font-family: inherit; min-height: 80px;"></textarea>
+                        </div>
+                        
+                        <div style="border-top: 1px solid var(--color-border); margin-top: 1rem; padding-top: 1rem;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--color-text-light);">Subtotal</span>
+                                <span style="font-weight: 600;">₹${cartTotal}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 1rem;">
+                                <span style="color: var(--color-text-light);">Delivery</span>
+                                <span style="font-weight: 600; color: var(--color-primary);">${deliveryDisp}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 1.5rem; font-size: 1.2rem; font-weight: 800; color: var(--color-primary-dark);">
+                                <span>Total Payable</span>
+                                <span>₹${totalPayable}</span>
+                            </div>
+                            
+                            <button type="submit" id="place-order-btn" style="width: 100%; background: var(--color-primary); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.2s;">
+                                Pay with ${gatewayNameDisplay}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                `;
+            }
+            html += '</div>';
+
+            workspace.innerHTML = html;
+            workspace.style.opacity = '1';
+            lucide.createIcons();
+
+            // Rebind state blur/change to recalculate delivery
+            const stateInput = document.getElementById('cust-state');
+            if (stateInput) {
+                stateInput.addEventListener('blur', (e) => {
+                    if (checkoutState !== e.target.value.trim() && e.target.value.trim() !== '') {
+                        checkoutState = e.target.value.trim();
+                        renderCart(); // Trigger total refresh
+                    }
+                });
+            }
+
+            // Bind Address Selector
+            const addrSelect = document.getElementById('cust-address-select');
+            const newAddrBlocks = document.getElementById('new-address-blocks');
+            if (addrSelect && newAddrBlocks) {
+                addrSelect.addEventListener('change', (e) => {
+                    if (e.target.value === 'NEW') {
+                        newAddrBlocks.style.display = 'flex';
+                        if (stateInput) stateInput.required = true;
+                        const addInp = document.getElementById('cust-address');
+                        if (addInp) addInp.required = true;
+                    } else {
+                        newAddrBlocks.style.display = 'none';
+                        if (stateInput) stateInput.required = false;
+                        const addInp = document.getElementById('cust-address');
+                        if (addInp) addInp.required = false;
+
+                        // Lookup state for selected ID to re-estimate shipping
+                        const selectedAddr = addresses.find(a => a.id == e.target.value);
+                        if (selectedAddr) {
+                            const selState = selectedAddr.state_name || selectedAddr.state;
+                            if (checkoutState !== selState) {
+                                checkoutState = selState;
+                                renderCart();
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Intercept form
+            const form = document.getElementById('checkout-form');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('place-order-btn');
+                    btn.innerText = 'Redirecting...';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.7';
+
+                    try {
+                        const items = CartManager.getCart().map(i => ({
+                            productId: i.product.id,
+                            quantity: i.quantity,
+                            price: MainAPI.getProductPrice(i.product)
+                        }));
+
+                        // Determine address logic
+                        let useAddressId = null;
+                        if (addrSelect && addrSelect.value !== 'NEW') {
+                            useAddressId = addrSelect.value;
+                        }
+
+                        const payload = {
+                            email: isLoggedIn ? user.email : document.getElementById('cust-email').value,
+                            name: isLoggedIn ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : document.getElementById('cust-name').value,
+                            phone: isLoggedIn ? user.phone_number : document.getElementById('cust-phone').value,
+                            shippingAddressId: useAddressId,
+                            billingAddressId: useAddressId,
+                            shippingMethod: 'free',
+                            paymentMethod: activeGateway ? activeGateway.name : 'cod',
+                            deliveryCharge: currentDeliveryCharge,
+                            items: items
+                        };
+
+                        // Optional hook if we wanted to auto-create addresses if NEW selected, but let the backend handle minimal payload or manual updates as currently built.
+                        // (Usually a guest order holds it unstructured internally based on payload overrides in backend depending on schema)
+
+                        const response = await MainAPI.createOrder(payload);
+
+                        if (response.requiresPayment && response.paymentLink) {
+                            window.location.href = response.paymentLink;
+                            return; // Stop execution here
+                        }
+
+                        // Fallback Success Logic (e.g. COD mode or local bypass)
+                        CartManager.clear();
+                        workspace.innerHTML = `
+                            <div style="text-align:center; padding: 4rem 1rem; background: var(--color-white); border-radius: 18px;">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(0,77,64,0.1); color: var(--color-primary); display: flex; align-items:center; justify-content:center; margin: 0 auto 1rem;">
+                                    <i data-lucide="check" style="width: 40px; height: 40px;"></i>
+                                </div>
+                                <h2 style="color: var(--color-primary-dark); margin-bottom: 0.5rem;">Order Placed Successfully!</h2>
+                                <p style="color: var(--color-text-light); margin-bottom: 2rem;">Your order number is #${response.order.order_number}</p>
+                                <a href="orders.html" style="background: var(--color-white); color: var(--color-primary); border: 2px solid var(--color-primary); padding: 12px 30px; border-radius: 50px; font-weight: 600; display: inline-block; margin-right: 10px;">
+                                    View Orders
+                                </a>
+                                <a href="index.html" style="background: var(--color-primary); color: white; padding: 12px 30px; border-radius: 50px; font-weight: 600; display: inline-block;">
+                                    Continue Shopping
+                                </a>
+                            </div>
+                        `;
+                        lucide.createIcons();
+
+                    } catch (err) {
+                        alert("Error placing order: " + err.message);
+                        btn.innerText = `Pay with ${gatewayNameDisplay}`;
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    }
+                });
+            }
+
+            isCartLoading = false;
+        }
+    </script>
+</body>
+
+</html>

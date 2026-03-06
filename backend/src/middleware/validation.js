@@ -58,7 +58,7 @@ const validateProduct = [
 
 // Order validation
 const validateOrder = [
-  body('shippingAddressId').isUUID(),
+  body('shippingAddressId').optional({ nullable: true }),
   body('items').isArray({ min: 1 }),
   body('items.*.productId').isUUID(),
   body('items.*.quantity').isInt({ min: 1 }),

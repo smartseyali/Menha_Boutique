@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - Categories</title>
+    <link rel="icon" href="data:,">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .page-header {
+            background: var(--color-white);
+            padding: 2rem 0;
+            text-align: center;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--color-primary-dark);
+            font-weight: 800;
+        }
+
+        .grid-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 2rem;
+            justify-content: center;
+        }
+
+        .grid-category-item {
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-normal);
+            cursor: pointer;
+        }
+
+        .grid-category-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary);
+        }
+
+        .grid-category-item img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 1rem;
+            border: 3px solid var(--color-light-gray);
+        }
+
+        .grid-category-item h3 {
+            font-size: 1rem;
+            color: var(--color-text);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header" id="header">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="index.html" class="action-btn"><i data-lucide="arrow-left"></i></a>
+                <a href="index.html" class="brand">
+                    <div class="brand-text">Menha</div>
+                </a>
+            </div>
+            <div class="header-right">
+                <a href="cart.html" class="action-btn cart-container">
+                    <i data-lucide="shopping-bag"></i>
+                    <span class="badge" id="cart-badge">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title">Shop by Category</h1>
+        </div>
+    </div>
+
+    <main class="main-content container section-padding" style="min-height: 50vh;">
+        <div class="grid-categories" id="all-categories-container">
+            <!-- Loader -->
+            <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
+            <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
+            <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
+            <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-block footer-brand">
+                    <div class="brand-text">Menha</div>
+                    <p>Elevate your style with our premium collection of curated fashion. Experience modern boutique
+                        shopping.</p>
+                    <div class="social-links">
+                        <a href="javascript:void(0)" class="social-link" title="Facebook"><i
+                                data-lucide="facebook"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Instagram"><i
+                                data-lucide="instagram"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Twitter"><i
+                                data-lucide="twitter"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="categories.html">Categories</a></li>
+                        <li><a href="index.html">Products</a></li>
+                        <li><a href="cart.html">Shopping Cart</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="javascript:void(0)">Contact Us</a></li>
+                        <li><a href="javascript:void(0)">Shipping Policy</a></li>
+                        <li><a href="javascript:void(0)">Returns & Exchanges</a></li>
+                        <li><a href="javascript:void(0)">FAQs</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Contact Info</h3>
+                    <ul class="footer-links">
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001</li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900</li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                &copy; <span id="current-year"></span> Menha Boutique. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            const container = document.getElementById('all-categories-container');
+            const categories = await MainAPI.fetchCategories();
+
+            if (categories && categories.length > 0) {
+                let html = '';
+                categories.forEach(cat => {
+                    const img = cat.image || 'https://via.placeholder.com/100';
+                    const name = cat.name || 'Category';
+                    html += `
+                        <div class="grid-category-item" onclick="window.location.href='index.html'">
+                            <img src="${img}" alt="${name}">
+                            <h3>${name}</h3>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<p>No categories found.</p>';
+            }
+        });
+    </script>
+</body>
+
+</html>
