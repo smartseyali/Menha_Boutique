@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS } from '../constants/theme';
 import { useCart } from '../context/CartContext';
+import { setAuthToken } from '../services/api';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -20,6 +21,7 @@ import OrdersScreen from '../screens/OrdersScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import AddressScreen from '../screens/AddressScreen';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
+import CategoryProductsScreen from '../screens/CategoryProductsScreen';
 
 // Types
 export type RootStackParamList = {
@@ -32,6 +34,7 @@ export type RootStackParamList = {
   OrderDetail: { orderId: string, orderData?: any };
   Wishlist: undefined;
   Address: undefined;
+  CategoryProducts: { categoryId: string, categoryName: string };
 };
 
 // Navigators
@@ -111,6 +114,7 @@ const AppNavigator = () => {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
+        setAuthToken(token);
         setIsAuthenticated(true);
       }
     } catch (e) {
@@ -183,6 +187,12 @@ const AppNavigator = () => {
             component={AddressScreen} 
             options={{ headerShown: false }} 
         /> 
+        
+        <Stack.Screen 
+            name="CategoryProducts" 
+            component={CategoryProductsScreen} 
+            options={{ headerShown: false }} 
+        />
     </Stack.Navigator>
   );
 };

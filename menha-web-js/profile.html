@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - My Profile</title>
+    <link rel="icon" href="data:,">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .profile-header {
+            text-align: center;
+            padding: 3rem 1rem;
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+            color: white;
+            border-radius: 0 0 32px 32px;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            border: 3px solid rgba(255,255,255,0.5);
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .menu-grid {
+            display: grid;
+            gap: 1rem;
+            padding-bottom: 3rem;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            padding: 1.2rem;
+            background: var(--color-white);
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--color-primary-dark);
+            font-weight: 600;
+            transition: var(--transition-normal);
+            border: 1px solid var(--color-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .menu-item:hover {
+            transform: translateX(5px);
+            border-color: var(--color-primary);
+            background: #f8faf9;
+        }
+
+        .menu-item i {
+            color: var(--color-primary);
+        }
+
+        .menu-item.logout {
+            color: #d32f2f;
+            margin-top: 1rem;
+        }
+
+        .menu-item.logout i {
+            color: #d32f2f;
+        }
+
+        .menu-item.admin {
+            background: #fff8e1;
+            border-color: #ffb300;
+        }
+
+        .menu-item .arrow {
+            margin-left: auto;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body style="background: #fafafa;">
+
+    <header class="header" id="header" style="background: var(--color-primary-dark); box-shadow: none;">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="index.html" class="action-btn" style="color: white;"><i data-lucide="chevron-left"></i></a>
+                <span style="color: white; font-weight: 600; font-size: 1.1rem;">My Account</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="profile-header">
+        <div class="container">
+            <div class="profile-avatar" id="profile-initials">U</div>
+            <h1 id="profile-name" style="font-size: 1.5rem; margin-bottom: 0.3rem;">Loading...</h1>
+            <p id="profile-email" style="font-size: 0.9rem; opacity: 0.8;">...</p>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="menu-grid">
+            <a href="orders.html" class="menu-item">
+                <i data-lucide="package"></i>
+                <span>My Orders</span>
+                <i data-lucide="chevron-right" class="arrow"></i>
+            </a>
+
+            <a href="cart.html" class="menu-item">
+                <i data-lucide="shopping-bag"></i>
+                <span>My Cart</span>
+                <i data-lucide="chevron-right" class="arrow"></i>
+            </a>
+
+            <a href="addresses.html" class="menu-item">
+                <i data-lucide="map-pin"></i>
+                <span>My Addresses</span>
+                <i data-lucide="chevron-right" class="arrow"></i>
+            </a>
+
+            <!-- Admin Menu (Hidden by default) -->
+            <a href="admin.html" id="admin-menu" class="menu-item admin" style="display: none;">
+                <i data-lucide="shield-check" style="color: #ffb300;"></i>
+                <span>Admin Panel</span>
+                <i data-lucide="chevron-right" class="arrow"></i>
+            </a>
+
+            <a href="javascript:void(0)" class="menu-item logout" id="logout-btn">
+                <i data-lucide="log-out"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </main>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            const user = MainAPI.getUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Update Profile Info
+            const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User';
+            document.getElementById('profile-name').textContent = fullName;
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('profile-initials').textContent = (user.first_name || 'U').charAt(0).toUpperCase();
+
+            // Show Admin Menu if applicable
+            if (user.role === 'admin') {
+                document.getElementById('admin-menu').style.display = 'flex';
+            }
+            // Logout handler
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    MainAPI.logout();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput,
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import api from '../services/api';
+import api, { MainAPI } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { COLORS, THEME } from '../constants/theme';
 
@@ -38,11 +38,10 @@ const CheckoutScreen = () => {
   // Helper Functions for Location
   const fetchCountries = async () => {
     try {
-        const response = await api.get('/locations/countries');
-        setCountries(response.data.countries || []);
-        const india = (response.data.countries || []).find((c: any) => c.name === 'India');
+        const countries = await MainAPI.getCountries();
+        setCountries(countries);
+        const india = countries.find((c: any) => c.name === 'India');
         if (india) {
-           // Pre-set India
            setSelectedCountry(india);
            setNewCountry(india.name);
            fetchStates(india.id);
@@ -54,8 +53,8 @@ const CheckoutScreen = () => {
 
   const fetchStates = async (countryId: any) => {
       try {
-          const response = await api.get(`/locations/states?countryId=${countryId}`);
-          setStates(response.data.states || []);
+          const states = await MainAPI.getStates(countryId);
+          setStates(states);
       } catch (error) {
           console.log('Error fetching states', error);
       }
@@ -63,8 +62,8 @@ const CheckoutScreen = () => {
 
   const fetchCities = async (stateId: any) => {
       try {
-          const response = await api.get(`/locations/cities?stateId=${stateId}`);
-          setCities(response.data.cities || []);
+          const cities = await MainAPI.getCities(stateId);
+          setCities(cities);
       } catch (error) {
           console.log('Error fetching cities', error);
       }
@@ -147,25 +146,17 @@ const CheckoutScreen = () => {
          setIsProcessing(true);
          try {
              // Create Address
-             const addressPayload = {
+             const addressData = await MainAPI.saveAddress({
                  firstName: newFirstName,
                  lastName: newLastName,
                  addressLine: newAddressLine,
                  city: newCity,
                  postalCode: newPostCode,
                  state: newState,
-                 stateName: newState, // Backend expects this key also
                  country: newCountry,
-                 countryName: newCountry, // Backend expects this key also
-                 addressType: 'Home',
                  isDefault: false
-             };
-             const addrRes = await api.post('/addresses', addressPayload);
-             if (addrRes.data && addrRes.data.address) {
-                 finalAddressId = addrRes.data.address.id;
-             } else {
-                 throw new Error('Failed to save address');
-             }
+             });
+             finalAddressId = addressData.id;
          } catch (err) {
              console.log(err);
              Alert.alert('Error', 'Could not save new address');
@@ -182,64 +173,34 @@ const CheckoutScreen = () => {
     setIsProcessing(true);
     
     try {
-        const orderPayload = {
+        const orderData = await MainAPI.createOrder({
             shippingAddressId: finalAddressId,
-            billingAddressId: finalAddressId,
             items: cartItems.map((item: any) => {
-                const unitPrice = item.new_price || item.newPrice || item.price || 0; 
+                const p = item.product || item;
+                const unitPrice = p.new_price || p.newPrice || p.price || 0; 
                 return { 
-                    productId: item.product_id || item.id, 
+                    productId: p.id, 
                     quantity: item.quantity,
                     price: unitPrice,
                     total: unitPrice * item.quantity
                 };
             }),
-            paymentMethod: paymentMethod === 'online' ? 'razorpay' : 'cod',
-            shippingMethod: 'free',
+            paymentMethod: paymentMethod === 'online' ? 'online' : 'cod',
             total: totalAmount 
-        };
-        
-        
-        const response = await api.post('/orders', orderPayload);
+        });
         
         setIsProcessing(false);
-        if (response.status === 201) {
-             const { order, requiresPayment, paymentLink } = response.data;
-             
-             if (requiresPayment && paymentLink) {
-                 // Open Payment Link
-                 Alert.alert(
-                     'Payment Required', 
-                     'You will be redirected to the payment gateway to complete your transaction.',
-                     [
-                         { 
-                             text: 'Proceed to Pay', 
-                             onPress: async () => {
-                                 const supported = await Linking.canOpenURL(paymentLink);
-                                 if (supported) {
-                                     await Linking.openURL(paymentLink);
-                                     // Navigate to Orders so they see it when they return
-                                     await updateCartCount();
-                                     navigation.navigate('Orders');
-                                 } else {
-                                     Alert.alert('Error', 'Cannot open payment link');
-                                 }
-                             }
-                         }
-                     ]
-                 );
-             } else {
-                 // COD or no payment required immediatley
-                 await updateCartCount(); 
-                 Alert.alert('Success', 'Order placed successfully!', [
-                    { text: 'OK', onPress: () => navigation.navigate('Orders') }
-                 ]);
-             }
-        }
+        // Clear Cart
+        await AsyncStorage.removeItem('mb_cart');
+        await updateCartCount();
+        
+        Alert.alert('Success', 'Order placed successfully!', [
+           { text: 'OK', onPress: () => navigation.navigate('Orders') }
+        ]);
     } catch (error: any) {
         console.error(error);
         setIsProcessing(false);
-        const msg = error.response?.data?.message || 'Payment failed';
+        const msg = error.message || 'Payment failed';
         Alert.alert('Error', msg);
     }
   };
@@ -266,8 +227,7 @@ const CheckoutScreen = () => {
 
   const fetchAddresses = async () => {
     try {
-      const response = await api.get('/addresses');
-      const list = response.data.addresses || response.data || [];
+      const list = await MainAPI.getAddresses();
       setSavedAddresses(list);
       
       // Auto-select default or first

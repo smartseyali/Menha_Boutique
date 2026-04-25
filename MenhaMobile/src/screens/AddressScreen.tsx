@@ -2,20 +2,28 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { MainAPI } from '../services/api';
 
 const AddressScreen = () => {
   const navigation = useNavigation();
 
-  // Mock data for now
-  const addresses = [
-    {
-      id: '1',
-      name: 'Home',
-      details: '123, Green Street, Gandhipuram, Coimbatore - 641012',
-      phone: '+91 9876543210',
-      isDefault: true,
+  const [addresses, setAddresses] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetchAddresses();
+  }, []);
+
+  const fetchAddresses = async () => {
+    try {
+      const data = await MainAPI.getAddresses();
+      setAddresses(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
@@ -26,8 +34,8 @@ const AddressScreen = () => {
         </View>
         {item.isDefault && <Text style={styles.defaultText}>DEFAULT</Text>}
       </View>
-      <Text style={styles.details}>{item.details}</Text>
-      <Text style={styles.phone}>Phone: {item.phone}</Text>
+      <Text style={styles.details}>{item.address || item.address_line1}, {item.city}, {item.state} - {item.zip_code || item.postal_code}</Text>
+      <Text style={styles.phone}>Phone: {item.phone_number}</Text>
       
       <View style={styles.actions}>
           <TouchableOpacity style={styles.actionBtn}>

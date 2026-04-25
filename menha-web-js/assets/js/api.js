@@ -1,12 +1,123 @@
-const API_BASE_URL = 'https://menhaapi.smartseyali.app/api';
+const SUPABASE_URL = 'https://nmvglqfqjfhiolreascc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdmdscWZxamZoaW9scmVhc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTA5NzUsImV4cCI6MjA5MTM2Njk3NX0.zzVYmqcsXdi-3ITdWKm-QHiuUwcvBrhX2txv7dZnkb0';
+
+// Tiny Supabase REST Wrapper (to match admin.js usage)
+const Supabase = {
+    from(table) {
+        let method = 'GET';
+        let body = null;
+        let query = '';
+        let filters = [];
+        let orders = [];
+
+        const builder = {
+            select(columns = '*') {
+                method = 'GET';
+                query = `select=${columns}`;
+                return this;
+            },
+            insert(data) {
+                method = 'POST';
+                body = data;
+                return this;
+            },
+            update(data) {
+                method = 'PATCH';
+                body = data;
+                return this;
+            },
+            delete() {
+                method = 'DELETE';
+                return this;
+            },
+            eq(column, value) {
+                filters.push(`${column}=eq.${value}`);
+                return this;
+            },
+            order(column, ascending = true) {
+                orders.push(`${column}.${ascending ? 'asc' : 'desc'}`);
+                return this;
+            },
+            or(filter) {
+                filters.push(`or=(${filter})`);
+                return this;
+            },
+            // Compatibility for older code using .get() or .execute()
+            async get() {
+                return await this;
+            },
+            async execute() {
+                return await this;
+            },
+            // This makes the builder "awaitable"
+            then(onFulfilled, onRejected) {
+                let url = `${SUPABASE_URL}/rest/v1/${table}`;
+                if (method === 'GET' || method === 'PATCH' || method === 'DELETE') {
+                    const params = [];
+                    if (query) params.push(query);
+                    if (filters.length) params.push(...filters);
+                    if (orders.length) params.push(`order=${orders.join(',')}`);
+                    if (params.length) url += `?${params.join('&')}`;
+                }
+
+                // Security Check: UPDATE/DELETE must have filters
+                if ((method === 'PATCH' || method === 'DELETE') && filters.length === 0) {
+                    return Promise.reject(new Error(`${method} requires a WHERE clause (use .eq())`)).catch(onRejected);
+                }
+
+                const sessionToken = localStorage.getItem('menha_token');
+                const options = {
+                    method: method,
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${sessionToken || SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': method === 'POST' ? 'return=representation' : (method === 'PATCH' ? 'return=representation' : '')
+                    }
+                };
+                if (body) options.body = JSON.stringify(body);
+
+                return fetch(url, options)
+                    .then(async response => {
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error(`Supabase ${method} Error:`, errorText);
+                            throw new Error(errorText || `Supabase ${method} failed`);
+                        }
+                        if (response.status === 204) return [];
+                        try {
+                            return await response.json();
+                        } catch(e) { return []; }
+                    })
+                    .then(onFulfilled, onRejected);
+            }
+        };
+        return builder;
+    },
+    async rpc(fn, params = {}) {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'RPC failed');
+        }
+        return await response.json();
+    }
+};
+
+window.Supabase = Supabase;
 
 const MainAPI = {
     async fetchBanners() {
         try {
-            const response = await fetch(`${API_BASE_URL}/banners`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            return data;
+            return await Supabase.from('banners').select('*').eq('is_active', true).order('sequence', true).get();
         } catch (error) {
             console.error("Error fetching banners:", error);
             return [];
@@ -15,10 +126,7 @@ const MainAPI = {
 
     async fetchCategories() {
         try {
-            const response = await fetch(`${API_BASE_URL}/categories`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            return data.categories || data || [];
+            return await Supabase.from('categories').select('*').order('sequence', true).get();
         } catch (error) {
             console.error("Error fetching categories:", error);
             return [];
@@ -27,93 +135,383 @@ const MainAPI = {
 
     async fetchProducts() {
         try {
-            const response = await fetch(`${API_BASE_URL}/products`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            return data.products || data || [];
+            return await Supabase.from('products').select('*,product_attributes(*)').order('sequence', true).get();
         } catch (error) {
             console.error("Error fetching products:", error);
             return [];
         }
     },
+    async fetchProductsByCategory(categoryId) {
+        try {
+            return await Supabase.from('products').select('*,product_attributes(*)').eq('category_id', categoryId).order('sequence', true).get();
+        } catch (error) {
+            console.error("Error fetching products by category:", error);
+            return [];
+        }
+    },
+
+    async fetchProductById(id) {
+        try {
+            const results = await Supabase.from('products').select('*,product_attributes(*)').eq('id', id).get();
+            const product = results.length ? results[0] : null;
+            if (product) {
+                // Fetch images and reviews in parallel
+                const [images, reviews] = await Promise.all([
+                    this.fetchProductImages(id),
+                    this.fetchReviews(id)
+                ]);
+                product.additional_images = images;
+                product.reviews = reviews;
+            }
+            return product;
+        } catch (error) {
+            console.error("Error fetching product by ID:", error);
+            return null;
+        }
+    },
+
+    async fetchProductImages(productId) {
+        try {
+            return await Supabase.from('product_images').select('*').eq('product_id', productId).order('display_order', true).get();
+        } catch (error) {
+            console.error("Error fetching product images:", error);
+            return [];
+        }
+    },
+
+    async fetchReviews(productId) {
+        try {
+            // Joining with users to get the name of the reviewer
+            return await Supabase.from('product_reviews').select('*, users(first_name, last_name)').eq('product_id', productId).order('created_at', false).get();
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+            return [];
+        }
+    },
+
+    async submitReview(reviewData) {
+        try {
+            const user = this.getUser();
+            if (!user) throw new Error('You must be logged in to provide a review');
+
+            const payload = {
+                product_id: reviewData.product_id,
+                user_id: user.id,
+                rating: parseInt(reviewData.rating),
+                comment: reviewData.comment,
+                updated_at: new Date().toISOString()
+            };
+
+            return await Supabase.from('product_reviews').insert(payload);
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            throw error;
+        }
+    },
     
-    // Helper formats
     getProductImage(product) {
-        if (product.primary_image) return `https://menhaapi.smartseyali.app${product.primary_image}`;
+        if (product.primary_image) return product.primary_image;
         if (product.image) return product.image;
         if (product.imageUrl) return product.imageUrl;
-        if (product.images && product.images.length > 0) {
-            return product.images[0].url || product.images[0];
-        }
-        return 'https://via.placeholder.com/300x300?text=No+Image'; // fallback
+        return 'https://via.placeholder.com/300x300?text=No+Image'; 
     },
 
     getProductPrice(product) {
-        return product.new_price || product.newPrice || product.price || product.sellingPrice || product.mrp || 0;
+        // If it's a cart item with a specific selected price, use it
+        if (product.price && !product.new_price) return parseFloat(product.price);
+        return parseFloat(product.new_price || product.price || 0);
+    },
+
+    async upsertUserAddress(addr) {
+        const user = this.getUser();
+        if(!user) throw new Error('User not logged in');
+        
+        const data = {
+            user_id: user.id,
+            first_name: addr.first_name,
+            last_name: addr.last_name,
+            address_line1: addr.address_line1 || addr.address_line,
+            address_line2: addr.address_line2 || null,
+            city: addr.city,
+            state: addr.state,
+            zip_code: addr.zip_code || addr.postal_code,
+            country: addr.country || 'India',
+            phone_number: addr.phone_number || user.phone_number,
+            is_default: addr.is_default || false,
+            updated_at: new Date().toISOString()
+        };
+
+        if (addr.id) {
+            // Update
+            return await Supabase.from('addresses').eq('id', addr.id).update(data);
+        } else {
+            // Insert
+            return await Supabase.from('addresses').insert(data);
+        }
+    },
+
+    async saveAddress(addr) {
+        return this.upsertUserAddress(addr);
+    },
+
+    async getNextOrderNumber() {
+        try {
+            const results = await Supabase.from('order_prefix').select('*').get();
+            if (!results || !results.length) {
+                // Fallback if table is empty
+                return 'ORD-' + Math.floor(Math.random()*10000);
+            }
+            
+            const config = results[0];
+            const prefix = config.prefix || 'ORD';
+            const sequence = parseInt(config.next_sequence || 1000);
+            
+            const orderNum = `${prefix}-${sequence}`;
+            
+            // Increment for next time
+            await Supabase.from('order_prefix').update({ next_sequence: sequence + 1 }).eq('id', config.id);
+            
+            return orderNum;
+        } catch (e) {
+            console.error("Order sequence error:", e);
+            return 'ORD-' + Math.floor(Math.random()*10000);
+        }
     },
 
     async createOrder(orderData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/orders`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(orderData)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Failed to place order');
-            return data;
+            const user = this.getUser();
+            const orderNum = await this.getNextOrderNumber();
+            
+            const orderPayload = {
+                user_id: user ? user.id : null,
+                order_number: orderNum,
+                email: orderData.email,
+                total_price: orderData.total_price,
+                status: 'pending',
+                payment_status: orderData.payment_status || 'unpaid',
+                payment_method: orderData.payment_method || orderData.paymentMethod || 'cod',
+                delivery_charge: orderData.delivery_charge || 0,
+                address_id: orderData.shippingAddressId || orderData.address_id,
+                comments: orderData.comments || '',
+                payment_link: orderData.gateway_transaction_id || null,
+                courier_id: orderData.courier_id || null,
+                courier_name: orderData.courier_name || null
+            };
+            
+            const results = await Supabase.from('orders').insert(orderPayload);
+            const newOrder = (results && results.length) ? results[0] : results;
+            
+            if (orderData.items && orderData.items.length) {
+                for (const item of orderData.items) {
+                    await Supabase.from('order_items').insert({
+                        order_id: newOrder.id,
+                        product_id: item.productId || item.product_id,
+                        quantity: item.quantity,
+                        unit_price: item.price || item.unit_price,
+                        total_price: item.quantity * (item.price || item.unit_price),
+                        attribute_id: item.variantId || item.attribute_id || null
+                    });
+                }
+            }
+
+            return { success: true, order: newOrder };
         } catch (error) {
             console.error("Order error:", error);
             throw error;
         }
     },
 
+    async getAvailableCouriers() {
+        try {
+            return await Supabase.from('couriers').select('*').eq('is_active', true).get();
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    },
+    async getAvailableGateways() {
+        try {
+            return await Supabase.from('payment_gateways').select('*').eq('is_active', true).get();
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    },
+
+    async updateOrderPayment(orderNumber, status, transactionId = null) {
+        try {
+            const data = {
+                payment_status: status,
+                updated_at: new Date().toISOString()
+            };
+            if (transactionId) data.payment_link = transactionId; // Or store in a dedicated txn column if it exists
+
+            await Supabase.from('orders').eq('order_number', orderNumber).update(data);
+            return true;
+        } catch (e) {
+            console.error("Error updating order payment:", e);
+            return false;
+        }
+    },
+
+    async initiateGatewayPayment(order, gateway) {
+        const type = gateway.type.toLowerCase();
+        
+        switch (type) {
+            case 'razorpay':
+                return this.handleRazorpay(order, gateway);
+            case 'phonepe':
+                return { type: 'redirect', url: await this.generatePhonePePaymentLink(order, gateway) };
+            case 'stripe':
+                return this.handleStripe(order, gateway);
+            case 'cashfree':
+                return this.handleCashfree(order, gateway);
+            case 'payu':
+                return this.handlePayU(order, gateway);
+            case 'ccavenue':
+                return this.handleCCAvenue(order, gateway);
+            default:
+                throw new Error('Selected payment gateway not supported yet');
+        }
+    },
+
+    async handleRazorpay(order, gateway) {
+        const creds = gateway.credentials;
+        const options = {
+            "key": creds.key_id,
+            "amount": Math.round(order.total_price * 100),
+            "currency": "INR",
+            "name": "Menha Boutique",
+            "description": "Order Payment",
+            "image": "assets/images/logo.jpg",
+            "handler": function (response) {
+                // This will be called upon success
+                // We need to trigger the post-payment logic
+                window.location.href = window.location.origin + window.location.pathname + `?status=success&payment_id=${response.razorpay_payment_id}`;
+            },
+            "prefill": {
+                "name": order.newAddress ? `${order.newAddress.first_name} ${order.newAddress.last_name}` : "",
+                "email": order.email || ""
+            },
+            "theme": { "color": "#7c3aed" },
+            "modal": {
+                "ondismiss": function() {
+                    window.location.reload();
+                }
+            }
+        };
+        
+        return { type: 'function', fn: () => { const rzp = new Razorpay(options); rzp.open(); } };
+    },
+
+    async generatePhonePePaymentLink(order, gateway) {
+        const creds = gateway.credentials;
+        const merchantId = creds.merchantId;
+        const saltKey = creds.saltKey;
+        const saltIndex = creds.saltIndex;
+        const isTest = gateway.is_test_mode;
+
+        const transactionId = "TXN" + Date.now();
+        const amount = Math.round(order.total_price * 100); // PhonePe expects amount in paise
+
+        const payload = {
+            merchantId: merchantId,
+            merchantTransactionId: transactionId,
+            merchantUserId: order.user_id || "GUEST",
+            amount: amount,
+            redirectUrl: window.location.origin + window.location.pathname + `?status=success&transactionId=${transactionId}`,
+            redirectMode: "REDIRECT",
+            callbackUrl: window.location.origin + window.location.pathname, 
+            paymentInstrument: {
+                type: "PAY_PAGE"
+            }
+        };
+
+        const base64Payload = btoa(JSON.stringify(payload));
+        const stringToHash = base64Payload + "/pg/v1/pay" + saltKey;
+        const sha256 = CryptoJS.SHA256(stringToHash).toString();
+        const xVerify = sha256 + "###" + saltIndex;
+
+        if (isTest) {
+            return window.location.origin + window.location.pathname + `?status=success&transactionId=${transactionId}`;
+        }
+
+        // Production PhonePe Endpoint
+        const endpoint = "https://api.phonepe.com/apis/hermes/pg/v1/pay";
+        // However, standard browser CORS will block this. Usually this needs a backend.
+        // If the user wants pure frontend, we might have to use a different approach or they have a proxy.
+        return `https://merchants.phonepe.com/pg/v1/pay?payload=${base64Payload}&x-verify=${xVerify}`;
+    },
+
+    // Placeholders for other gateways as they usually require server-side signing or specific client SDKs
+    async handleStripe(order, gateway) {
+        // Stripe usually needs a Stripe-Account or Checkout Session created server-side
+        alert("Stripe Integration requires a backend endpoint to create Checkout Session.");
+        throw new Error("Stripe logic pending backend implementation.");
+    },
+
+    async handleCashfree(order, gateway) {
+        alert("Cashfree Integration requires server-side token generation.");
+        throw new Error("Cashfree logic pending backend implementation.");
+    },
+
+    async handlePayU(order, gateway) {
+        alert("PayU Integration requires server-side hash generation.");
+        throw new Error("PayU logic pending backend implementation.");
+    },
+
+    async handleCCAvenue(order, gateway) {
+        alert("CCAvenue Integration requires server-side encryption.");
+        throw new Error("CCAvenue logic pending backend implementation.");
+    },
+
     async getActiveGateway() {
         try {
-            const response = await fetch(`${API_BASE_URL}/payments/active-gateway`);
-            if (!response.ok) return null;
-            const data = await response.json();
-            return data.success ? data.gateway : null;
+            const gateways = await this.getAvailableGateways();
+            return gateways.length ? gateways[0] : null;
         } catch (e) {
             console.error(e);
             return null;
         }
     },
 
-    async calculateDeliveryCharge(state, items) {
+    async calculateDeliveryCharge(stateCode, items) {
         try {
-            const itemsPayload = items.map(i => ({
-                quantity: i.quantity,
-                attributeValue: i.product.weight || i.product.unit || '0g'
-            }));
-            const response = await fetch(`${API_BASE_URL}/delivery/calculate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ state, items: itemsPayload })
+            const state = await Supabase.from('states').select('zone').eq('code', stateCode).get();
+            const zone = (state.length > 0) ? state[0].zone : 'REST';
+            
+            // Simple calculation based on total weight
+            let totalWeight = 0;
+            items.forEach(item => {
+                const weightStr = item.product.weight || '0g';
+                const weightVal = parseInt(weightStr.replace(/[^0-9]/g, '')) || 0;
+                totalWeight += weightVal * item.quantity;
             });
-            if (!response.ok) return 0;
-            const data = await response.json();
-            return data.deliveryCharge || 0;
+
+            const tariffs = await Supabase.from('delivery_tariffs').select('*').order('max_weight', true).get();
+            const tier = tariffs.find(t => t.max_weight >= totalWeight) || tariffs[tariffs.length - 1];
+            
+            return tier ? (tier.prices[zone] || tier.prices['REST'] || 0) : 0;
         } catch (e) {
             console.error(e);
             return 0;
         }
     },
 
-    // Authentication
-    async login(email, password) {
+    async login(emailOrPhone, password) {
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Login failed');
+            const users = await Supabase.from('users').select('*')
+                .or(`email.eq.${emailOrPhone},phone_number.eq.${emailOrPhone}`)
+                .get();
+                
+            if (!users.length) throw new Error('User not found');
+            const user = users[0];
+            // In a real app, we'd check password_hash (bcrypt) via RPC
+            if (user.password_hash !== password) throw new Error('Invalid password');
+            
+            const data = { token: 'mock-jwt-token-' + user.id, user };
+            this.setAuthToken(data.token, data.user);
             return data;
         } catch (error) {
             console.error("Login Error:", error);
@@ -123,16 +521,44 @@ const MainAPI = {
 
     async register(userData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(userData)
+            // Check if user exists
+            const existing = await Supabase.from('users').select('id').eq('email', userData.email).get();
+            if (existing && existing.length) throw new Error('User already exists');
+
+            const result = await Supabase.from('users').insert({
+                email: userData.email,
+                password_hash: userData.password, // Ideally hashed
+                first_name: userData.firstName,
+                last_name: userData.lastName,
+                phone_number: userData.phoneNumber,
+                role: 'customer'
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Registration failed');
-            return data;
+            
+            const user = (result && result.length) ? result[0] : result;
+
+            // Save default address if provided
+            if (userData.address && user.id) {
+                try {
+                    await Supabase.from('addresses').insert({
+                        user_id: user.id,
+                        first_name: userData.firstName,
+                        last_name: userData.lastName,
+                        address_line1: userData.address.line1,
+                        city: userData.address.city,
+                        state: userData.address.state,
+                        zip_code: userData.address.postalCode,
+                        country: userData.address.country,
+                        phone_number: userData.phoneNumber,
+                        is_default: true
+                    });
+                } catch (addrError) {
+                    console.error("Error saving initial address:", addrError);
+                }
+            }
+            
+            const token = 'mock-jwt-token-' + (user.id || 'new');
+            this.setAuthToken(token, user);
+            return { success: true, user, token };
         } catch (error) {
             console.error("Registration Error:", error);
             throw error;
@@ -141,34 +567,33 @@ const MainAPI = {
 
     async getUserAddresses() {
         try {
-            const token = this.getAuthToken();
-            if (!token) return [];
-            const response = await fetch(`${API_BASE_URL}/addresses`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (!response.ok) return [];
-            const data = await response.json();
-            return data.addresses || [];
+            const user = this.getUser();
+            if (!user) return [];
+            return await Supabase.from('addresses').select('*').eq('user_id', user.id).get();
         } catch (error) {
             console.error("Error fetching addresses:", error);
             return [];
         }
     },
 
+    async deleteAddress(addressId) {
+        try {
+            return await Supabase.from('addresses').delete().eq('id', addressId).execute();
+        } catch (error) {
+            console.error("Error deleting address:", error);
+            throw error;
+        }
+    },
+
     async getOrders() {
         try {
-            const token = this.getAuthToken();
-            if (!token) return [];
-            const response = await fetch(`${API_BASE_URL}/orders`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (!response.ok) return [];
-            const data = await response.json();
-            return data.orders || [];
+            const user = this.getUser();
+            if (!user) return [];
+            return await Supabase.from('orders')
+                .select('*, items:order_items(*, product:products(*)), address:addresses(*)')
+                .eq('user_id', user.id)
+                .order('created_at', false)
+                .get();
         } catch (error) {
             console.error("Error fetching orders:", error);
             return [];
@@ -178,10 +603,7 @@ const MainAPI = {
     // Locations
     async getCountries() {
         try {
-            const response = await fetch(`${API_BASE_URL}/locations/countries`);
-            if (!response.ok) return [];
-            const data = await response.json();
-            return data.countries || [];
+            return await Supabase.from('countries').select('*').order('name', true).get();
         } catch (error) {
             console.error(error);
             return [];
@@ -190,10 +612,7 @@ const MainAPI = {
 
     async getStates(countryId) {
         try {
-            const response = await fetch(`${API_BASE_URL}/locations/states?countryId=${countryId}`);
-            if (!response.ok) return [];
-            const data = await response.json();
-            return data.states || [];
+            return await Supabase.from('states').select('*').eq('country_id', countryId).order('name', true).get();
         } catch (error) {
             console.error(error);
             return [];
@@ -202,10 +621,7 @@ const MainAPI = {
 
     async getCities(stateId) {
         try {
-            const response = await fetch(`${API_BASE_URL}/locations/cities?stateId=${stateId}`);
-            if (!response.ok) return [];
-            const data = await response.json();
-            return data.cities || [];
+            return await Supabase.from('cities').select('*').eq('state_id', stateId).order('name', true).get();
         } catch (error) {
             console.error(error);
             return [];
@@ -213,11 +629,7 @@ const MainAPI = {
     },
 
     setAuthToken(token, user) {
-        const sessionData = {
-            token,
-            user,
-            storedAt: new Date().getTime()
-        };
+        const sessionData = { token, user, storedAt: new Date().getTime() };
         localStorage.setItem('login_user', JSON.stringify(sessionData));
     },
 
@@ -225,23 +637,19 @@ const MainAPI = {
         try {
             const sessionData = JSON.parse(localStorage.getItem('login_user'));
             return sessionData ? sessionData.token : null;
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     },
 
     getUser() {
         try {
             const sessionData = JSON.parse(localStorage.getItem('login_user'));
             return sessionData ? sessionData.user : null;
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     },
 
     logout() {
         localStorage.removeItem('login_user');
-        window.location.reload();
+        window.location.href = 'login.html';
     },
 
     isAuthenticated() {
@@ -259,7 +667,8 @@ const CartManager = {
     },
     add(product, quantity = 1) {
         const cart = this.getCart();
-        const existing = cart.find(item => item.product.id === product.id);
+        const variantId = product.variant_id || '';
+        const existing = cart.find(item => item.product.id === product.id && (item.product.variant_id || '') === variantId);
         if (existing) {
             existing.quantity += quantity;
         } else {
@@ -267,21 +676,21 @@ const CartManager = {
         }
         this.saveCart(cart);
     },
-    update(productId, quantity) {
+    update(productId, quantity, variantId = '') {
         const cart = this.getCart();
-        const item = cart.find(i => i.product.id === productId);
+        const item = cart.find(i => i.product.id === productId && (i.product.variant_id || '') === variantId);
         if (item) {
             item.quantity = quantity;
             if (item.quantity <= 0) {
-                this.remove(productId);
+                this.remove(productId, variantId);
                 return;
             }
             this.saveCart(cart);
         }
     },
-    remove(productId) {
+    remove(productId, variantId = '') {
         let cart = this.getCart();
-        cart = cart.filter(i => i.product.id !== productId);
+        cart = cart.filter(i => !(i.product.id === productId && (i.product.variant_id || '') === variantId));
         this.saveCart(cart);
     },
     clear() {
@@ -299,3 +708,4 @@ const CartManager = {
 
 window.MainAPI = MainAPI;
 window.CartManager = CartManager;
+

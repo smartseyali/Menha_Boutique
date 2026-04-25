@@ -8,7 +8,7 @@
     <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/lucide@0.407.0/dist/umd/lucide.js"></script>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
@@ -18,9 +18,9 @@
     <header class="header" id="header">
         <div class="container header-container">
             <div class="header-left">
-                <button class="menu-btn"><i data-lucide="menu"></i></button>
-                <a href="index.html" class="brand">
-                    <div class="brand-text">Menha</div>
+                <a href="index.html" class="brand" style="display: flex; align-items: center; gap: 8px;">
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img" style="height: 40px; width: auto;">
+                    <span class="brand-text" style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); white-space: nowrap;">Menha Boutique</span>
                 </a>
             </div>
 
@@ -42,9 +42,12 @@
         <!-- Banners Section -->
         <section class="banner-section">
             <div class="container">
-                <div class="banner-carousel" id="banner-container">
-                    <!-- Banners will be injected here -->
-                    <div class="loading-shimmer" style="height: 100%; border-radius: 16px;"></div>
+                <div class="banner-wrapper">
+                    <div class="banner-carousel" id="banner-container">
+                        <!-- Banners will be injected here -->
+                        <div class="loading-shimmer" style="height: 100%; width: 100%;"></div>
+                    </div>
+                    <div class="carousel-indicators" id="banner-indicators"></div>
                 </div>
             </div>
         </section>
@@ -92,16 +95,18 @@
         <div class="container">
             <div class="footer-container">
                 <div class="footer-block footer-brand">
-                    <div class="brand-text">Menha</div>
-                    <p>Elevate your style with our premium collection of curated fashion. Experience modern boutique
-                        shopping.</p>
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img">
+                    <span class="brand-text" style="font-size: 1.25rem; font-weight: 800; color: var(--color-white); display: block; margin-bottom: 0.5rem;">Menha Boutique</span>
+                    <p>Experience the best in self-care with our premium range of personal care and self-care solutions.
+                        We are committed to providing high-quality offerings designed to support daily wellness,
+                        hygiene, and overall well-being.</p>
                     <div class="social-links">
                         <a href="javascript:void(0)" class="social-link" title="Facebook"><i
                                 data-lucide="facebook"></i></a>
                         <a href="javascript:void(0)" class="social-link" title="Instagram"><i
                                 data-lucide="instagram"></i></a>
-                        <a href="javascript:void(0)" class="social-link" title="Twitter"><i
-                                data-lucide="twitter"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Youtube"><i
+                                data-lucide="youtube"></i></a>
                     </div>
                 </div>
 
@@ -119,9 +124,8 @@
                     <h3 class="footer-title">Customer Service</h3>
                     <ul class="footer-links">
                         <li><a href="javascript:void(0)">Contact Us</a></li>
-                        <li><a href="javascript:void(0)">Shipping Policy</a></li>
-                        <li><a href="javascript:void(0)">Returns & Exchanges</a></li>
-                        <li><a href="javascript:void(0)">FAQs</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms & Conditions</a></li>
                     </ul>
                 </div>
 
@@ -130,13 +134,16 @@
                     <ul class="footer-links">
                         <li
                             style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001</li>
+                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001
+                        </li>
                         <li
                             style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900</li>
+                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900
+                        </li>
                         <li
                             style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com</li>
+                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com
+                        </li>
                     </ul>
                 </div>
             </div>

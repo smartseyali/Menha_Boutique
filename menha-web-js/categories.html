@@ -8,7 +8,7 @@
     <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/lucide@0.407.0/dist/umd/lucide.js"></script>
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         .page-header {
@@ -70,8 +70,9 @@
         <div class="container header-container">
             <div class="header-left">
                 <a href="index.html" class="action-btn"><i data-lucide="arrow-left"></i></a>
-                <a href="index.html" class="brand">
-                    <div class="brand-text">Menha</div>
+                <a href="index.html" class="brand" style="display: flex; align-items: center; gap: 8px;">
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img" style="height: 40px; width: auto;">
+                    <span class="brand-text" style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); white-space: nowrap;">Menha Boutique</span>
                 </a>
             </div>
             <div class="header-right">
@@ -85,12 +86,16 @@
 
     <div class="page-header">
         <div class="container">
-            <h1 class="page-title">Shop by Category</h1>
+            <h1 class="page-title" id="category-page-title">Shop by Category</h1>
+            <p id="category-page-subtitle" style="color: var(--color-text-light); margin-top: 0.5rem; display: none;">Showing products for selected category</p>
+            <button id="back-to-categories" onclick="showAllCategories()" style="display: none; margin: 1rem auto 0; background: var(--color-primary); color: white; border: none; padding: 8px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; align-items: center; gap: 8px;">
+                <i data-lucide="arrow-left" style="width: 16px;"></i> Back to Categories
+            </button>
         </div>
     </div>
 
     <main class="main-content container section-padding" style="min-height: 50vh;">
-        <div class="grid-categories" id="all-categories-container">
+        <div class="grid-categories" id="main-content-container">
             <!-- Loader -->
             <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
             <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
@@ -104,16 +109,18 @@
         <div class="container">
             <div class="footer-container">
                 <div class="footer-block footer-brand">
-                    <div class="brand-text">Menha</div>
-                    <p>Elevate your style with our premium collection of curated fashion. Experience modern boutique
-                        shopping.</p>
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img">
+                    <span class="brand-text" style="font-size: 1.25rem; font-weight: 800; color: var(--color-white); display: block; margin-bottom: 0.5rem;">Menha Boutique</span>
+                    <p>Experience the best in self-care with our premium range of personal care and self-care solutions.
+                        We are committed to providing high-quality offerings designed to support daily wellness,
+                        hygiene, and overall well-being.</p>
                     <div class="social-links">
                         <a href="javascript:void(0)" class="social-link" title="Facebook"><i
                                 data-lucide="facebook"></i></a>
                         <a href="javascript:void(0)" class="social-link" title="Instagram"><i
                                 data-lucide="instagram"></i></a>
-                        <a href="javascript:void(0)" class="social-link" title="Twitter"><i
-                                data-lucide="twitter"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Youtube"><i
+                                data-lucide="youtube"></i></a>
                     </div>
                 </div>
 
@@ -131,9 +138,8 @@
                     <h3 class="footer-title">Customer Service</h3>
                     <ul class="footer-links">
                         <li><a href="javascript:void(0)">Contact Us</a></li>
-                        <li><a href="javascript:void(0)">Shipping Policy</a></li>
-                        <li><a href="javascript:void(0)">Returns & Exchanges</a></li>
-                        <li><a href="javascript:void(0)">FAQs</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms & Conditions</a></li>
                     </ul>
                 </div>
 
@@ -142,13 +148,16 @@
                     <ul class="footer-links">
                         <li
                             style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001</li>
+                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001
+                        </li>
                         <li
                             style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900</li>
+                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900
+                        </li>
                         <li
                             style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com</li>
+                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -164,28 +173,111 @@
 
     <script src="assets/js/api.js"></script>
     <script>
+        let allCategories = [];
+        const mainContainer = document.getElementById('main-content-container');
+        const pageTitle = document.getElementById('category-page-title');
+        const pageSubtitle = document.getElementById('category-page-subtitle');
+        const backBtn = document.getElementById('back-to-categories');
+
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
-            const container = document.getElementById('all-categories-container');
-            const categories = await MainAPI.fetchCategories();
+            
+            // Check for category ID in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryId = urlParams.get('id');
 
-            if (categories && categories.length > 0) {
+            if (categoryId) {
+                // Fetch category name first or just load products
+                allCategories = await MainAPI.fetchCategories();
+                const cat = allCategories.find(c => c.id === categoryId);
+                if (cat) {
+                    await selectCategory(cat.id, cat.name);
+                } else {
+                    await showAllCategories();
+                }
+            } else {
+                await showAllCategories();
+            }
+        });
+
+        async function showAllCategories() {
+            mainContainer.innerHTML = '<div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>'.repeat(4);
+            pageTitle.innerText = 'Shop by Category';
+            pageSubtitle.style.display = 'none';
+            backBtn.style.display = 'none';
+            mainContainer.className = 'grid-categories';
+
+            allCategories = await MainAPI.fetchCategories();
+
+            if (allCategories && allCategories.length > 0) {
                 let html = '';
-                categories.forEach(cat => {
+                allCategories.forEach(cat => {
                     const img = cat.image || 'https://via.placeholder.com/100';
                     const name = cat.name || 'Category';
                     html += `
-                        <div class="grid-category-item" onclick="window.location.href='index.html'">
+                        <div class="grid-category-item" onclick="selectCategory('${cat.id}', '${name}')">
                             <img src="${img}" alt="${name}">
                             <h3>${name}</h3>
                         </div>
                     `;
                 });
-                container.innerHTML = html;
+                mainContainer.innerHTML = html;
             } else {
-                container.innerHTML = '<p>No categories found.</p>';
+                mainContainer.innerHTML = '<p>No categories found.</p>';
             }
-        });
+            lucide.createIcons();
+        }
+
+        async function selectCategory(categoryId, categoryName) {
+            mainContainer.innerHTML = '<div class="loading-shimmer" style="height: 250px; border-radius: 16px;"></div>'.repeat(4);
+            pageTitle.innerText = categoryName;
+            pageSubtitle.style.display = 'block';
+            backBtn.style.display = 'flex';
+            mainContainer.className = 'product-grid';
+
+            const products = await MainAPI.fetchProductsByCategory(categoryId);
+
+            if (products && products.length > 0) {
+                let html = '';
+                products.forEach(p => {
+                    const img = MainAPI.getProductImage(p);
+                    const price = MainAPI.getProductPrice(p);
+                    const oldPrice = p.old_price || p.price || price;
+                    const rating = p.rating || 0;
+
+                    html += `
+                        <div class="product-card" onclick="window.location.href='product.html?id=${p.id}'">
+                            <div class="prod-img-box">
+                                <img src="${img}" alt="${p.title}">
+                                <div class="card-actions">
+                                    <button class="icon-btn" onclick="event.stopPropagation();"><i data-lucide="heart"></i></button>
+                                </div>
+                            </div>
+                            <div class="prod-info">
+                                <h3 class="prod-title">${p.title}</h3>
+                                <div class="prod-meta">
+                                    <div class="rating-pill">
+                                        <i data-lucide="star"></i>
+                                        <span>${rating}</span>
+                                    </div>
+                                    <span>${p.weight || ''}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div class="prod-price">₹${price}</div>
+                                    <button class="icon-btn" style="background: var(--color-primary); color: white;" onclick="event.stopPropagation(); CartManager.addItem(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                                        <i data-lucide="shopping-cart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                mainContainer.innerHTML = html;
+            } else {
+                mainContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><p style="color: #64748b;">No products found in this category.</p></div>';
+            }
+            lucide.createIcons();
+        }
     </script>
 </body>
 

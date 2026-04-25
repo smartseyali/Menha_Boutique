@@ -93,6 +93,18 @@ img {
     letter-spacing: -0.5px;
 }
 
+.logo-img {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.footer .logo-img {
+    height: 60px;
+    margin-bottom: 1rem;
+}
+
 .menu-btn,
 .action-btn {
     background: none;
@@ -162,19 +174,66 @@ img {
     padding: 1.5rem 0;
 }
 
-.banner-carousel {
-    height: 350px;
+.banner-wrapper {
+    position: relative;
     border-radius: 16px;
     overflow: hidden;
-    position: relative;
-    background: var(--color-white);
     box-shadow: var(--shadow-md);
+}
+
+.banner-carousel {
+    height: 350px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: var(--color-white);
+    display: flex;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.banner-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.banner-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    scroll-snap-align: start;
+    position: relative;
+    overflow: hidden;
 }
 
 .banner-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.carousel-indicators {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: var(--transition-normal);
+}
+
+.indicator.active {
+    background: var(--color-white);
+    width: 24px;
+    border-radius: 4px;
 }
 
 /* Categories */
@@ -293,8 +352,8 @@ img {
 .prod-img-box img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    padding: 1rem;
+    object-fit: cover;
+    padding: 0;
     transition: transform 0.4s ease;
 }
 
@@ -475,12 +534,17 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: rgba(255, 255, 255, 0.1);
+    width: 44px;
+    height: 44px;
+    background-color: rgba(255, 255, 255, 0.15);
     border-radius: 50%;
     color: var(--color-white);
-    transition: var(--transition-fast);
+    transition: var(--transition-normal);
+}
+
+.social-link svg {
+    width: 20px;
+    height: 20px;
 }
 
 .social-link:hover {

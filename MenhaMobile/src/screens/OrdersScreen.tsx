@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, SafeAreaView, StatusBar, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import api from '../services/api';
+import api, { MainAPI } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
@@ -16,10 +16,10 @@ const OrdersScreen = () => {
 
   const fetchOrders = async () => {
     try {
-        const response = await api.get('/orders');
-        setOrders(response.data.orders || response.data || []);
+        const orders = await MainAPI.getOrders();
+        setOrders(orders);
     } catch (error) {
-       // console.error(error); // silent fail for now
+       console.error(error);
     } finally {
        setLoading(false);
     }
@@ -51,6 +51,15 @@ const OrdersScreen = () => {
       </View>
       
       <View style={styles.divider} />
+      
+      {item.addresses && (
+        <View style={{ marginBottom: 12 }}>
+            <Text style={styles.label}>Shipping Address</Text>
+            <Text style={styles.addressValue} numberOfLines={2}>
+                {item.addresses.address_line1 || item.addresses.address_line}, {item.addresses.city}, {item.addresses.state} {item.addresses.zip_code}
+            </Text>
+        </View>
+      )}
       
       <View style={styles.detailsRow}>
           <View>
@@ -157,6 +166,12 @@ const styles = StyleSheet.create({
       fontSize: 14,
       color: '#333',
       fontWeight: '500',
+  },
+  addressValue: {
+      fontSize: 13,
+      color: '#444',
+      fontWeight: '400',
+      lineHeight: 18,
   },
   totalPrice: {
       fontSize: 18,

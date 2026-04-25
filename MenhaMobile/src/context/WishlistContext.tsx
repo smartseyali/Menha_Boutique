@@ -19,10 +19,9 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshWishlist = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      if (token) {
-        const response = await api.get('/wishlist');
-        setWishlist(response.data.wishlist || response.data || []);
+      const wishlistJson = await AsyncStorage.getItem('mb_wishlist');
+      if (wishlistJson) {
+          setWishlist(JSON.parse(wishlistJson));
       } else {
           setWishlist([]);
       }
@@ -37,24 +36,26 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
 
   const addToWishlist = async (product: any) => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      if (!token) throw new Error('Auth required');
-
-      await api.post('/wishlist/add', { productId: product.id });
-      await refreshWishlist();
+      const wishlistJson = await AsyncStorage.getItem('mb_wishlist') || '[]';
+      let list = JSON.parse(wishlistJson);
+      if (!list.find((item: any) => item.id === product.id)) {
+          list.push(product);
+          await AsyncStorage.setItem('mb_wishlist', JSON.stringify(list));
+          setWishlist(list);
+      }
     } catch (error) {
       console.error("Failed to add to wishlist", error);
       throw error;
     }
   };
 
-  const removeFromWishlist = async (wishlistId: string) => {
+  const removeFromWishlist = async (productId: string) => {
     try {
-        const token = await AsyncStorage.getItem('auth_token');
-        if (!token) throw new Error('Auth required');
-  
-        await api.delete(`/wishlist/${wishlistId}`);
-        await refreshWishlist();
+        const wishlistJson = await AsyncStorage.getItem('mb_wishlist') || '[]';
+        let list = JSON.parse(wishlistJson);
+        list = list.filter((item: any) => item.id !== productId);
+        await AsyncStorage.setItem('mb_wishlist', JSON.stringify(list));
+        setWishlist(list);
     } catch (error) {
         console.error("Failed to remove from wishlist", error);
         throw error;
@@ -62,27 +63,13 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isInWishlist = (productId: string) => {
-      // API returns item.product_id usually
-      return wishlist.some(item => item.product_id === productId || item.id === productId); 
-      // Note: Backend findByUserId returns items joined with products. 
-      // The row usually has 'id' (wishlist id) and 'product_id'.
+      return wishlist.some(item => item.id === productId); 
   };
 
   const toggleWishlist = async (product: any) => {
-      const token = await AsyncStorage.getItem('auth_token');
-      if (!token) {
-          throw new Error('Login Required');
-      }
-
-      // Find if item exists
-      // The wishlist array from backend has "product_id"
-      const existingItem = wishlist.find(item => item.product_id === product.id);
-
-      if (existingItem) {
-          // Remove
-          await removeFromWishlist(existingItem.id); // existingItem.id is the wishlist UUID
+      if (isInWishlist(product.id)) {
+          await removeFromWishlist(product.id);
       } else {
-          // Add
           await addToWishlist(product);
       }
   };

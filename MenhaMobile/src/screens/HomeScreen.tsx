@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, ScrollView, RefreshControl, StyleSheet, ActivityIndicator, SafeAreaView, Platform, StatusBar as RNStatusBar, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import api from '../services/api';
+import api, { MainAPI } from '../services/api';
 
 import { COLORS } from '../constants/theme';
 
@@ -49,39 +49,28 @@ const HomeScreen = () => {
   const fetchData = async () => {
     try {
       // Fetch Banners
-      // Note: Backend /banners returns an array directly
-      const bannersRes = await api.get('/banners').catch(err => ({ data: [] }));
-      const bannersData = Array.isArray(bannersRes.data) ? bannersRes.data : [];
+      const bannersData = await MainAPI.fetchBanners();
       const mappedBanners = bannersData.map((b: any) => ({
           id: b.id,
           image: b.image_url || b.imageUrl || b.image,
           name: b.title || '',
           link: b.link
       }));
-      setBanners(mappedBanners.length > 0 ? mappedBanners : []);
+      setBanners(mappedBanners);
 
       // Fetch Categories
-      // Backend returns { categories: [...] }
-      const categoriesRes = await api.get('/categories').catch(err => ({ data: { categories: [] } }));
-      const categoriesResponseData = categoriesRes.data || {};
-      const categoriesList = categoriesResponseData.categories || (Array.isArray(categoriesResponseData) ? categoriesResponseData : []);
+      const categoriesList = await MainAPI.fetchCategories();
       setCategories(categoriesList);
 
-      // Fetch Products (New Arrivals / All)
-      const productsRes = await api.get('/products').catch(err => ({ data: [] }));
-      // Backend might return { products: [...] } or just [...]
-      const productsData = productsRes.data.products || (Array.isArray(productsRes.data) ? productsRes.data : []);
+      // Fetch Products
+      const productsData = await MainAPI.fetchProducts();
       setProducts(productsData);
 
-      // Fetch Best Selling
-      const bestSellingRes = await api.get('/products/bestselling').catch(err => ({ data: [] }));
-      const bestSellingResponseData = bestSellingRes.data || {};
-      const bestSellingList = bestSellingResponseData.products || (Array.isArray(bestSellingResponseData) ? bestSellingResponseData : []);
-      setBestSelling(bestSellingList.length > 0 ? bestSellingList : productsData.slice(0, 4));
+      // Best Selling (Mock for now or filter)
+      setBestSelling(productsData.slice(0, 4));
 
     } catch (error) {
       console.error('Error fetching data:', error);
-      // Alert.alert('Error', 'Could not fetch data. Please check your connection.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -102,8 +91,7 @@ const HomeScreen = () => {
   };
 
   const handleCategoryPress = (item: Category) => {
-      // Navigate to category product list or filter (Placeholder)
-      Alert.alert("Category", `Clicked ${item.name}`);
+      navigation.navigate('CategoryProducts', { categoryId: item.id, categoryName: item.name });
   };
 
   if (loading) {

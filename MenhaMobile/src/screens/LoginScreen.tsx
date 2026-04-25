@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ImageBackground, Image, StatusBar, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import api, { setAuthToken } from '../services/api';
+import api, { setAuthToken, MainAPI } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,18 +22,7 @@ const LoginScreen = ({ route }: any) => {
 
     setLoading(true);
     try {
-      const isEmail = identifier.includes('@');
-      const payload = {
-        password,
-        ...(isEmail ? { email: identifier } : { phoneNumber: identifier })
-      };
-      
-      const response = await api.post('/auth/login', payload);
-      const { token, user } = response.data;
-
-      setAuthToken(token);
-      await AsyncStorage.setItem('auth_token', token);
-      await AsyncStorage.setItem('user_info', JSON.stringify(user));
+      const { user, token } = await MainAPI.login(identifier, password);
       
       if (setIsAuthenticated) {
         setIsAuthenticated(true);
@@ -42,7 +31,6 @@ const LoginScreen = ({ route }: any) => {
       // Handle Redirect Logic
       const { redirect, cartItems, totalAmount } = route.params || {};
       if (redirect === 'Checkout') {
-          // Pass the cart params back to checkout
           navigation.replace('Checkout', { cartItems, totalAmount });
       } else if (navigation.canGoBack()) {
         navigation.goBack();
@@ -51,7 +39,7 @@ const LoginScreen = ({ route }: any) => {
       }
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
+      Alert.alert('Login Failed', error.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
@@ -69,7 +57,7 @@ const LoginScreen = ({ route }: any) => {
             style={styles.overlay}
         >
             <KeyboardAvoidingView 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={{ flex: 1 }}
             >
                 <ScrollView 

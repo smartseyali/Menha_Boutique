@@ -22,7 +22,8 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.menhaboutique.mobile"
+      "package": "com.menhaboutique.mobile",
+      "softwareKeyboardLayoutMode": "adjustResize"
     },
     "web": {
       "favicon": "./assets/logo.png"

@@ -108,10 +108,10 @@
 
             <div class="header-right">
                 <a href="cart.html" class="action-btn" style="position: relative;">
-                    <i data-lucide="shopping-cart"></i>
+                    <i data-lucide="shopping-bag"></i>
                     <span class="badge" id="cart-badge" style="display:none;">0</span>
                 </a>
-                <a href="login.html" class="action-btn" title="Profile"><i data-lucide="user"></i></a>
+                <a href="profile.html" class="action-btn" title="Profile"><i data-lucide="user"></i></a>
             </div>
         </div>
     </header>
@@ -130,9 +130,11 @@
         <div class="container">
             <div class="footer-container">
                 <div class="footer-block footer-brand">
-                    <div class="brand-text">Menha</div>
-                    <p>Elevate your style with our premium collection of curated fashion. Experience modern boutique
-                        shopping.</p>
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img">
+                    <span class="brand-text" style="font-size: 1.25rem; font-weight: 800; color: var(--color-white); display: block; margin-bottom: 0.5rem;">Menha Boutique</span>
+                    <p>Experience the best in self-care with our premium range of personal care and self-care solutions.
+                        We are committed to providing high-quality offerings designed to support daily wellness,
+                        hygiene, and overall well-being.</p>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -192,7 +194,7 @@
                             const img = MainAPI.getProductImage(item.Product || item.product || {});
                             const title = (item.Product || item.product || {}).title || 'Product';
                             const q = item.quantity || 1;
-                            const price = item.price || 0;
+                            const price = item.unit_price || item.price || 0;
 
                             itemsHtml += `
                                 <div class="order-item">
@@ -227,14 +229,36 @@
                                 ${itemsHtml || '<p style="color: var(--color-text-light); font-style: italic;">No items found in this order payload.</p>'}
                             </div>
 
+                            <div style="margin-bottom: 1.5rem; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #f1f5f9;">
+                                <h5 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Shipping Address</h5>
+                                <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">
+                                    ${o.address ? `
+                                        <strong>${o.address.first_name} ${o.address.last_name || ''}</strong><br>
+                                        ${o.address.address_line1 || o.address.address_line || ''}<br>
+                                        ${o.address.city}, ${o.address.state} - ${o.address.zip_code || o.address.postal_code || ''}<br>
+                                        ${o.address.country}<br>
+                                        <span style="color: #64748b; font-size: 0.85rem;">Phone: ${o.address.phone_number || ''}</span>
+                                    ` : '<span style="color: #94a3b8; font-style: italic;">Address details not available</span>'}
+                                </div>
+                            </div>
+
                             <div style="border-top: 1px solid var(--color-border); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <div style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 0.25rem;">Total Amount</div>
-                                    <div style="font-weight: 800; color: var(--color-primary); font-size: 1.3rem;">₹${o.total_amount || 0}</div>
+                                    <div style="font-weight: 800; color: var(--color-primary); font-size: 1.3rem;">₹${o.total_price || 0}</div>
                                 </div>
-                                <div style="text-align: right;">
-                                    <div style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 0.25rem;">Payment By</div>
-                                    <div style="font-weight: 600; color: var(--color-primary-dark); text-transform: uppercase;">${o.payment_method || 'COD'}</div>
+                                <div style="display: flex; gap: 30px; text-align: right;">
+                                    <div>
+                                        <div style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 0.25rem;">Courier</div>
+                                        <div style="font-weight: 600; color: var(--color-primary-dark);"><i data-lucide="truck" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> ${o.courier_name || 'Standard'}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 0.25rem;">Payment By</div>
+                                        <div style="font-weight: 600; color: var(--color-primary-dark); text-transform: uppercase;">${o.payment_method || 'COD'}</div>
+                                        <div style="font-size: 0.75rem; font-weight: 700; color: ${o.payment_status === 'paid' ? '#10b981' : '#f59e0b'}; text-transform: uppercase; margin-top: 4px;">
+                                            ${o.payment_status || 'unpaid'}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

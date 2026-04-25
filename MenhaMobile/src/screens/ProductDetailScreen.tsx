@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, StatusBar, SafeAreaView, Platform } from 'react-native';
-import api from '../services/api';
+import api, { MainAPI } from '../services/api';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,8 +35,8 @@ const ProductDetailScreen = () => {
   
   const fetchProductDetails = async () => {
     try {
-      const response = await api.get(`/products/${productId}`);
-      setProduct(response.data.product || response.data);
+      const productData = await MainAPI.fetchProductById(productId);
+      setProduct(productData);
     } catch (error) {
       console.error(error);
     } finally {
@@ -45,33 +45,21 @@ const ProductDetailScreen = () => {
   };
 
   const addToCart = async (goToCart = false) => {
-    // Check Authentication First
-    const token = await AsyncStorage.getItem('auth_token');
-    console.log('Add to cart token check:', token, typeof token); 
-
-    if (!token || token === 'null' || token === 'undefined') {
-        if (Platform.OS === 'web') {
-            const confirmed = window.confirm('Login Required\n\nPlease login to add items to your cart.');
-            if (confirmed) {
-                navigation.navigate('Login');
-            }
-        } else {
-            Alert.alert(
-                'Login Required',
-                'Please login to add items to your cart.',
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Login', onPress: () => navigation.navigate('Login') }
-                ]
-            );
-        }
-        return;
-    }
-
     setAdding(true);
     try {
-        await api.post('/cart/add', { productId: product.id, quantity });
-        await updateCartCount(); // Update badge
+        // Since mobile doesn't have a backend cart table yet (it uses local storage for guest or syncs later)
+        // Let's use local storage for cart as well, or implement a sync.
+        // The web app uses localStorage.
+        const cartJson = await AsyncStorage.getItem('mb_cart') || '[]';
+        let cart = JSON.parse(cartJson);
+        const existing = cart.find((item: any) => item.product.id === product.id);
+        if (existing) {
+            existing.quantity += quantity;
+        } else {
+            cart.push({ product, quantity });
+        }
+        await AsyncStorage.setItem('mb_cart', JSON.stringify(cart));
+        await updateCartCount();
 
         if (goToCart) {
             navigation.navigate('Cart');
@@ -81,20 +69,7 @@ const ProductDetailScreen = () => {
 
     } catch (error: any) {
         console.error('Add to cart error:', error);
-        if (error.response && error.response.status === 401) {
-            // Token invalid or expired
-            await AsyncStorage.removeItem('auth_token'); // Clear invalid token
-            Alert.alert(
-                'Session Expired',
-                'Your session has expired. Please login again.',
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Login', onPress: () => navigation.navigate('Login') }
-                ]
-            );
-        } else {
-            Alert.alert('Error', 'Failed to add to cart: ' + (error.response?.data?.message || error.message));
-        }
+        Alert.alert('Error', 'Failed to add to cart');
     } finally {
         setAdding(false);
     }
@@ -177,7 +152,12 @@ const ProductDetailScreen = () => {
         </View>
 
         <View style={styles.imageWrapper}>
-             <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
+             <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
+                <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
+                {product.additional_images && product.additional_images.map((img: any, idx: number) => (
+                    <Image key={idx} source={{ uri: resolveImageUrl(img.image_url || img.imageUrl) }} style={styles.image} resizeMode="contain" />
+                ))}
+             </ScrollView>
              {discount > 0 && (
                  <View style={styles.discountBadge}>
                      <Text style={styles.discountText}>{discount}% OFF</Text>
@@ -186,13 +166,13 @@ const ProductDetailScreen = () => {
         </View>
         
         <View style={styles.content}>
-          <Text style={styles.category}>{product.category?.name || product.category_name || 'Snacks & Sweets'}</Text>
+          <Text style={styles.category}>{product.categories?.name || product.category_name || 'Snacks & Sweets'}</Text>
           <Text style={styles.title}>{product.name || product.title}</Text>
           
           <View style={styles.metaRow}>
               <View style={styles.ratingBox}>
                   <Text style={styles.ratingText}>{rating} ★</Text>
-                  <Text style={styles.reviewText}> | {reviewCount} reviews</Text>
+                  <Text style={styles.reviewText}> | {product.reviews?.length || 0} reviews</Text>
               </View>
               
               <View style={styles.stockStatus}>
@@ -232,6 +212,24 @@ const ProductDetailScreen = () => {
                <Ionicons name="cube-outline" size={20} color="#666" style={{marginRight:8}} />
                <Text style={styles.deliveryText}>Standard Delivery: 2-3 Days</Text>
            </View>
+
+           {/* Reviews Section */}
+           {product.reviews && product.reviews.length > 0 && (
+               <>
+                <View style={styles.divider} />
+                <Text style={styles.descriptionHead}>Customer Reviews</Text>
+                {product.reviews.map((rev: any, idx: number) => (
+                    <View key={idx} style={styles.reviewCard}>
+                        <View style={styles.reviewHeader}>
+                            <Text style={styles.reviewerName}>{rev.users?.first_name} {rev.users?.last_name}</Text>
+                            <Text style={styles.reviewRating}>{rev.rating} ★</Text>
+                        </View>
+                        <Text style={styles.reviewComment}>{rev.comment}</Text>
+                        <Text style={styles.reviewDate}>{new Date(rev.created_at).toLocaleDateString()}</Text>
+                    </View>
+                ))}
+               </>
+           )}
         </View>
       </ScrollView>
 
@@ -502,6 +500,38 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  reviewCard: {
+      backgroundColor: '#f9f9f9',
+      padding: 15,
+      borderRadius: 12,
+      marginBottom: 15,
+  },
+  reviewHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+  },
+  reviewerName: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#333',
+  },
+  reviewRating: {
+      fontSize: 12,
+      fontWeight: 'bold',
+      color: COLORS.warning,
+  },
+  reviewComment: {
+      fontSize: 13,
+      color: '#555',
+      lineHeight: 18,
+      marginBottom: 10,
+  },
+  reviewDate: {
+      fontSize: 11,
+      color: '#999',
+  }
 });
 
 export default ProductDetailScreen;

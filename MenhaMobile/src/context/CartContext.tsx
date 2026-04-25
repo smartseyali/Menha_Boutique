@@ -14,27 +14,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const updateCartCount = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      if (token) {
-        // Authenticated: Fetch from API
-        // Assuming there is an endpoint to get cart or cart count
-        // If not, we might need to fetch cart and count items.
-        // Let's assume GET /cart returns { cart: [...] }
-        const response = await api.get('/cart').catch(() => ({ data: { cart: [] } }));
-        const cartItems = response.data.cart || [];
-        // Count total quantity or just distinct items? Usually distinct items for badge, or specific rule.
-        // Let's default to total items (sum of quantities) or distinct. Users usually prefer distinct items count or 1 dot.
-        // Let's go with number of distinct items like "3" in the mockup.
-        setCartCount(cartItems.length);
+      const cartJson = await AsyncStorage.getItem('mb_cart');
+      if (cartJson) {
+         const cart = JSON.parse(cartJson);
+         setCartCount(cart.length);
       } else {
-        // Guest: Fetch from AsyncStorage
-        const cartJson = await AsyncStorage.getItem('cart');
-        if (cartJson) {
-           const cart = JSON.parse(cartJson);
-           setCartCount(cart.length);
-        } else {
-           setCartCount(0);
-        }
+         setCartCount(0);
       }
     } catch (error) {
        console.error("Failed to update cart count", error);

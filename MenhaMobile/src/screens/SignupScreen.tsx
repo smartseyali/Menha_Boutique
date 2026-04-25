@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ImageBackground, StatusBar, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import api, { setAuthToken } from '../services/api';
+import api, { setAuthToken, MainAPI } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -41,12 +41,11 @@ const SignupScreen = ({ route }: any) => {
 
   const fetchCountries = async () => {
       try {
-          const response = await api.get('/locations/countries'); // Note: Endpoint confirmed from locationController
-          // If the backend returns { countries: [...] }
-          setCountries(response.data.countries || []);
+          const countries = await MainAPI.getCountries();
+          setCountries(countries);
           
-          // Pre-select India if available and not selected
-          const india = (response.data.countries || []).find((c: any) => c.name === 'India');
+          // Pre-select India if available
+          const india = countries.find((c: any) => c.name === 'India');
           if (india) {
               handleSelect(india, 'country');
           }
@@ -57,8 +56,8 @@ const SignupScreen = ({ route }: any) => {
 
   const fetchStates = async (countryId: any) => {
       try {
-          const response = await api.get(`/locations/states?countryId=${countryId}`);
-          setStates(response.data.states || []);
+          const states = await MainAPI.getStates(countryId);
+          setStates(states);
       } catch (error) {
           console.log('Error fetching states', error);
       }
@@ -66,8 +65,8 @@ const SignupScreen = ({ route }: any) => {
 
   const fetchCities = async (stateId: any) => {
       try {
-          const response = await api.get(`/locations/cities?stateId=${stateId}`);
-          setCities(response.data.cities || []);
+          const cities = await MainAPI.getCities(stateId);
+          setCities(cities);
       } catch (error) {
           console.log('Error fetching cities', error);
       }
@@ -118,7 +117,7 @@ const SignupScreen = ({ route }: any) => {
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      const payload = {
+      const { user, token } = await MainAPI.register({
         firstName,
         lastName,
         email,
@@ -126,35 +125,22 @@ const SignupScreen = ({ route }: any) => {
         password,
         address,
         postCode,
-        // Send Names as expected by backend
         country: selectedCountry?.name || '',
         state: selectedState?.name || '',
         city: selectedCity?.name || ''
-      };
-      
-      const response = await api.post('/auth/register', payload);
-      const { token, user } = response.data;
+      });
 
-      if (token) {
-          setAuthToken(token);
-          await AsyncStorage.setItem('auth_token', token);
-          
-          if (setIsAuthenticated) {
-            setIsAuthenticated(true);
-          }
-          
-          Alert.alert('Success', 'Account created successfully!', [
-              { text: 'OK', onPress: () => navigation.navigate('MainTabs') }
-          ]);
-      } else {
-           Alert.alert('Success', 'Account created! Please login.', [
-               { text: 'OK', onPress: () => navigation.navigate('Login') }
-           ]);
+      if (setIsAuthenticated) {
+        setIsAuthenticated(true);
       }
+      
+      Alert.alert('Success', 'Account created successfully!', [
+          { text: 'OK', onPress: () => navigation.navigate('MainTabs') }
+      ]);
 
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Signup Failed', error.response?.data?.message || 'Could not create account');
+      Alert.alert('Signup Failed', error.message || 'Could not create account');
     } finally {
       setLoading(false);
     }
@@ -191,7 +177,7 @@ const SignupScreen = ({ route }: any) => {
             style={styles.overlay}
         >
             <KeyboardAvoidingView 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={{ flex: 1 }}
             >
                 <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
@@ -384,8 +370,8 @@ const styles = StyleSheet.create({
   },
   formContainer: {
       flexGrow: 1,
-      justifyContent: 'flex-end',
-      paddingBottom: 20,
+      paddingBottom: 40,
+      paddingTop: 40,
   },
   title: {
     fontSize: 32,

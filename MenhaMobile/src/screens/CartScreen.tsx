@@ -27,22 +27,15 @@ const CartScreen = () => {
   const fetchCart = async () => {
       setLoading(true);
       try {
-          const token = await AsyncStorage.getItem('auth_token');
-          if (token) {
-               // API Call
-               const response = await api.get('/cart');
-               setCartItems(response.data.cart || []);
-          } else {
-               // Local Storage
-               const cartJson = await AsyncStorage.getItem('cart');
-               if (cartJson) {
-                   setCartItems(JSON.parse(cartJson));
-               }
-          }
-          await updateCartCount(); // Sync context
+           const cartJson = await AsyncStorage.getItem('mb_cart');
+           if (cartJson) {
+               setCartItems(JSON.parse(cartJson));
+           } else {
+               setCartItems([]);
+           }
+          await updateCartCount();
       } catch (error) {
           console.error(error);
-          // Fallback to empty if error
       } finally {
           setLoading(false);
       }
@@ -51,18 +44,12 @@ const CartScreen = () => {
   const updateQuantity = async (id: string, newQuantity: number) => {
       if (newQuantity < 1) return;
       try {
-          const token = await AsyncStorage.getItem('auth_token');
-          if (token) {
-              await api.put(`/cart/${id}`, { quantity: newQuantity });
-              fetchCart(); // This calls updateCartCount implicitly via fetchCart if needed, but fetchCart sets state.
-          } else {
-              const updatedCart = cartItems.map(item => 
-                  item.id === id ? { ...item, quantity: newQuantity } : item
-              );
-              setCartItems(updatedCart);
-              await AsyncStorage.setItem('cart', JSON.stringify(updatedCart));
-              await updateCartCount();
-          }
+          const updatedCart = cartItems.map(item => 
+              (item.product?.id === id || item.id === id) ? { ...item, quantity: newQuantity } : item
+          );
+          setCartItems(updatedCart);
+          await AsyncStorage.setItem('mb_cart', JSON.stringify(updatedCart));
+          await updateCartCount();
       } catch (error) {
           console.error(error);
           Alert.alert('Error', 'Could not update quantity');
@@ -71,16 +58,10 @@ const CartScreen = () => {
 
   const removeItem = async (id: string) => {
       try {
-          const token = await AsyncStorage.getItem('auth_token');
-          if (token) {
-              await api.delete(`/cart/${id}`);
-              fetchCart(); 
-          } else {
-              const updatedCart = cartItems.filter(item => item.id !== id);
-              setCartItems(updatedCart);
-              await AsyncStorage.setItem('cart', JSON.stringify(updatedCart));
-              await updateCartCount();
-          }
+          const updatedCart = cartItems.filter(item => (item.product?.id !== id && item.id !== id));
+          setCartItems(updatedCart);
+          await AsyncStorage.setItem('mb_cart', JSON.stringify(updatedCart));
+          await updateCartCount();
       } catch (error) {
            console.error(error);
            Alert.alert('Error', 'Could not remove item');

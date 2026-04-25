@@ -22,8 +22,10 @@ const OrderDetailScreen = () => {
 
   const fetchOrderDetails = async () => {
     try {
-      const response = await api.get(`/orders/${orderId}`);
-      setOrder(response.data.order || response.data);
+      const response = await api.get(`/orders?select=*,order_items(*,products(*))&id=eq.${orderId}`);
+      if (response.data.length) {
+          setOrder(response.data[0]);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -77,16 +79,22 @@ const OrderDetailScreen = () => {
             <Text style={styles.date}>{new Date(order.created_at).toLocaleString()}</Text>
         </View>
 
-        {/* Shipping Address - Optional if data exists */}
-        {order.address && (
+        {/* Shipping Address */}
+        {(order.addresses || order.address) && (
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Shipping Address</Text>
                 <View style={styles.addressBox}>
                     <Ionicons name="location-outline" size={20} color={COLORS.primary} style={{marginRight: 10}} />
                     <View style={{flex:1}}>
-                        <Text style={styles.addressText}>{order.address.line1 || order.address}</Text>
-                        {order.address.line2 && <Text style={styles.addressText}>{order.address.line2}</Text>}
-                        <Text style={styles.addressText}>{order.address.city}, {order.address.zip}</Text>
+                        {order.addresses ? (
+                            <>
+                                <Text style={styles.addressText}>{order.addresses.first_name} {order.addresses.last_name}</Text>
+                                <Text style={styles.addressText}>{order.addresses.address_line1 || order.addresses.address_line}</Text>
+                                <Text style={styles.addressText}>{order.addresses.city}, {order.addresses.state} {order.addresses.zip_code}</Text>
+                            </>
+                        ) : (
+                            <Text style={styles.addressText}>{order.address.line1 || order.address}</Text>
+                        )}
                     </View>
                 </View>
             </View>
