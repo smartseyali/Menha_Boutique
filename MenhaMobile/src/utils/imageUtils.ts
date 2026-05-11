@@ -3,8 +3,7 @@ export const resolveImageUrl = (path: string | null | undefined): string => {
     if (path.startsWith('http')) return path;
     if (path.startsWith('data:')) return path;
     
-    // For legacy images or relative paths, we can't easily resolve them without the old server
-    // but we'll return the path as is if it's already a component
-    return path;
+    // It's a relative path in Supabase bucket
+    return `https://wrjzdrhvrluamygexyvi.supabase.co/storage/v1/object/public/products/${path}`;
 };
 

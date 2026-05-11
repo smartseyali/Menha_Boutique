@@ -19,7 +19,6 @@
   <div class="sidebar-brand" style="display: flex; align-items: center; gap: 8px;">
     <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img" style="height: 40px; width: auto;">
     <span class="brand-text" style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); white-space: nowrap;">Menha Boutique</span>
-    <span class="admin-badge">Admin</span>
   </div>
   <nav class="sidebar-nav">
     <a href="#" class="sidebar-link active" data-tab="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a>
@@ -127,7 +126,18 @@
     <section id="tab-orders" class="admin-tab">
       <div class="tab-header">
         <h2>Orders</h2>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:10px; align-items: center;">
+          <div id="bulk-order-actions" style="display:none; align-items:center; gap:8px; padding: 5px 12px; background: #f1f5f9; border-radius: 8px; margin-right: 5px;">
+            <span style="font-size:0.85rem; font-weight:700; color:#475569; white-space:nowrap;">Bulk Action:</span>
+            <select id="bulk-order-status" style="padding:6px 10px; border-radius:6px; border:1px solid var(--color-border); font-size:0.85rem; background:white;">
+              <option value="pending">Pending</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <button class="btn-primary" style="padding:6px 12px; font-size:0.85rem;" onclick="bulkUpdateOrderStatus()">Apply</button>
+          </div>
           <button class="btn-secondary" onclick="exportOrdersToExcel()"><i data-lucide="download"></i> Export Excel</button>
           <button class="btn-primary" onclick="printSelectedOrders()"><i data-lucide="printer"></i> Print Labels</button>
         </div>
@@ -199,11 +209,25 @@
     <!-- DELIVERY TAB -->
     <section id="tab-delivery" class="admin-tab">
       <div class="tab-header"><h2>Delivery Tariffs</h2><button class="btn-primary" onclick="openTariffModal()"><i data-lucide="plus"></i> Add Tariff</button></div>
+      
       <div class="admin-card" style="margin-bottom:2rem;">
-        <div class="card-title">Weight-Based Tariff Tiers</div>
+        <div class="card-title">Delivery Calculation Mode</div>
+        <div style="display:flex; gap:20px; align-items:center; padding:0.5rem 0;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+            <input type="radio" name="delivery-mode" value="WEIGHT" checked onchange="updateDeliveryMode(this.value)" style="width:auto; transform:scale(1.2);"> By Weight (grams)
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+            <input type="radio" name="delivery-mode" value="RATE" onchange="updateDeliveryMode(this.value)" style="width:auto; transform:scale(1.2);"> By Rate (Order Value)
+          </label>
+        </div>
+        <small style="color:#666; display:block; margin-top:8px;">Choose how delivery charges are calculated for all orders.</small>
+      </div>
+
+      <div class="admin-card" style="margin-bottom:2rem;">
+        <div class="card-title">Tariff Tiers</div>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>Max Weight (g)</th><th>TN</th><th>SOUTH</th><th>REST</th><th>NE</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Calculation Type</th><th>Max Threshold</th><th>TN</th><th>SOUTH</th><th>REST</th><th>NE</th><th>Actions</th></tr></thead>
             <tbody id="tariffs-tbody"><tr><td colspan="6" class="loading-row">Loading...</td></tr></tbody>
           </table>
         </div>
@@ -523,7 +547,14 @@
     <div class="modal-head"><h3 id="tariff-modal-title">Add Tariff</h3><button onclick="closeAllModals()"><i data-lucide="x"></i></button></div>
     <form id="tariff-form" onsubmit="saveTariff(event)">
       <input type="hidden" id="tf-id">
-      <div class="form-group"><label>Max Weight (grams) *</label><input type="number" id="tf-weight" required></div>
+      <div class="form-group" style="margin-bottom:1.5rem;">
+        <label>Calculation Type *</label>
+        <select id="tf-type" onchange="toggleTariffLabel(this.value)" required>
+          <option value="WEIGHT">By Weight (grams)</option>
+          <option value="RATE">By Rate (Order Value)</option>
+        </select>
+      </div>
+      <div class="form-group"><label id="tf-threshold-label">Max Weight (grams) *</label><input type="number" id="tf-weight" required></div>
       <div class="form-grid-2">
         <div class="form-group"><label>TN Price (₹) *</label><input type="number" id="tf-tn" required></div>
         <div class="form-group"><label>SOUTH Price (₹) *</label><input type="number" id="tf-south" required></div>

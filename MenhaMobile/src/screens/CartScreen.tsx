@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, SafeAreaView, StatusBar, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -70,7 +70,8 @@ const CartScreen = () => {
 
   const calculateTotal = () => {
       return cartItems.reduce((sum, item) => {
-          const price = item.new_price || item.newPrice || item.price || 0;
+          const p = item.product || item;
+          const price = p.new_price || p.newPrice || p.price || 0;
           return sum + (price * item.quantity);
       }, 0);
   };
@@ -78,25 +79,31 @@ const CartScreen = () => {
   const handleCheckout = async () => {
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) {
-          Alert.alert('Login Required', 'Please login to place your order.', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Login', onPress: () => navigation.navigate('Login', { redirect: 'Checkout', cartItems, totalAmount: calculateTotal() }) }
-          ]);
+          if (Platform.OS === 'web') {
+              alert('Please login to place your order.');
+              navigation.navigate('Login', { redirect: 'Checkout', cartItems, totalAmount: calculateTotal() });
+          } else {
+              Alert.alert('Login Required', 'Please login to place your order.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Login', onPress: () => navigation.navigate('Login', { redirect: 'Checkout', cartItems, totalAmount: calculateTotal() }) }
+              ]);
+          }
       } else {
           navigation.navigate('Checkout', { cartItems, totalAmount: calculateTotal() });
       }
   };
 
   const renderItem = ({ item }: { item: any }) => {
+    const p = item.product || item;
     const rawImageUrl = 
-      item.primary_image || 
-      item.primaryImage || 
-      (item.images && item.images.length > 0 ? (item.images[0].image_url || item.images[0].imageUrl || item.images[0].url) : null) || 
-      item.image;
+      p.primary_image || 
+      p.primaryImage || 
+      (p.images && p.images.length > 0 ? (p.images[0].image_url || p.images[0].imageUrl || p.images[0].url) : null) || 
+      p.image;
 
     const imageUrl = resolveImageUrl(rawImageUrl);
 
-    const displayPrice = item.new_price || item.newPrice || item.price;
+    const displayPrice = p.new_price || p.newPrice || p.price;
 
     return (
       <View style={styles.card}>
@@ -105,13 +112,13 @@ const CartScreen = () => {
         </View>
         <View style={styles.details}>
           <View style={styles.infoRow}>
-            <Text style={styles.name} numberOfLines={2}>{item.name || item.title}</Text>
-            <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.deleteBtn}>
+            <Text style={styles.name} numberOfLines={2}>{p.name || p.title}</Text>
+            <TouchableOpacity onPress={() => removeItem(item.id || p.id)} style={styles.deleteBtn}>
                 <Ionicons name="trash-outline" size={20} color={COLORS.danger} />
             </TouchableOpacity>
           </View>
           
-          <Text style={styles.category}>{item.category?.name || item.category_name || 'Snacks'}</Text>
+          <Text style={styles.category}>{p.categories?.name || p.category?.name || p.category_name || 'Snacks'}</Text>
           <Text style={styles.price}>₹{displayPrice}</Text>
 
           <View style={styles.counterContainer}>
@@ -166,7 +173,7 @@ const CartScreen = () => {
       <FlatList
         data={cartItems}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => (item.id || item.product?.id || index).toString()}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       />

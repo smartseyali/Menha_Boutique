@@ -134,9 +134,14 @@ const SignupScreen = ({ route }: any) => {
         setIsAuthenticated(true);
       }
       
-      Alert.alert('Success', 'Account created successfully!', [
-          { text: 'OK', onPress: () => navigation.navigate('MainTabs') }
-      ]);
+      if (Platform.OS === 'web') {
+          alert('Account created successfully!');
+          navigation.navigate('MainTabs');
+      } else {
+          Alert.alert('Success', 'Account created successfully!', [
+              { text: 'OK', onPress: () => navigation.navigate('MainTabs') }
+          ]);
+      }
 
     } catch (error: any) {
       console.error(error);

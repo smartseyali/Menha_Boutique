@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput,
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api, { MainAPI } from '../services/api';
+import PaymentGatewayService from '../services/PaymentGatewayService';
 import { useCart } from '../context/CartContext';
 import { COLORS, THEME } from '../constants/theme';
 
@@ -115,18 +117,27 @@ const CheckoutScreen = () => {
       return [];
   };
 
-  // Payment Gateway State
+  // Payment Gateway & Courier State
   const [activeGateway, setActiveGateway] = useState<any>(null);
+  const [couriers, setCouriers] = useState<any[]>([]);
+  const [selectedCourier, setSelectedCourier] = useState<any>(null);
 
-  const fetchActiveGateway = async () => {
+  const fetchData = async () => {
     try {
-        const res = await api.get('/payments/active-gateway');
-        if (res.data && res.data.success) {
-            setActiveGateway(res.data.gateway);
+        const [gatewayList, courierList] = await Promise.all([
+            MainAPI.getAvailableGateways(),
+            MainAPI.getAvailableCouriers()
+        ]);
+        if (gatewayList.length > 0) {
+            setActiveGateway(gatewayList[0]);
             setPaymentMethod('online');
         }
+        setCouriers(courierList);
+        if (courierList.length > 0) {
+            setSelectedCourier(courierList[0]);
+        }
     } catch (error) {
-        console.log('Error fetching active gateway', error);
+        console.log('Error fetching checkout data', error);
     }
   };
 
@@ -134,6 +145,28 @@ const CheckoutScreen = () => {
   const [address, setAddress] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('online');
+  const [deliveryFee, setDeliveryFee] = useState(0);
+
+  const updateDeliveryCharge = async (stateName: string) => {
+    if (!stateName) {
+        setDeliveryFee(0);
+        return;
+    }
+    try {
+        // Find state code if possible, or just pass state name if the API handles it.
+        // The API expects stateCode. Let's find it.
+        let stateCode = stateName;
+        if (states.length > 0) {
+            const found = states.find(s => s.name === stateName);
+            if (found) stateCode = found.code;
+        }
+        const fee = await MainAPI.calculateDeliveryCharge(stateCode, cartItems);
+        setDeliveryFee(fee);
+    } catch (error) {
+        console.log('Error calculating delivery fee', error);
+        setDeliveryFee(0);
+    }
+  };
 
   const handlePayment = async () => {
     let finalAddressId = selectedAddressId;
@@ -166,7 +199,38 @@ const CheckoutScreen = () => {
     } else {
         if (!finalAddressId) {
              Alert.alert('Required', 'Please select a delivery address');
+             setIsProcessing(false);
              return;
+        }
+    }
+
+    // Native Payment Gateway Processing
+    let transactionId = null;
+    const finalTotal = totalAmount + deliveryFee;
+    if (paymentMethod === 'online') {
+        setIsProcessing(true);
+        try {
+            // We pass a mock order object with necessary details for SDKs
+            const mockOrder = {
+                total_price: finalTotal,
+                order_number: 'ORD-' + Date.now(),
+                email: '', // Should be fetched if available
+                phone_number: '', 
+                customer_name: `${newFirstName} ${newLastName}`
+            };
+            
+            const result: any = await PaymentGatewayService.processPayment(mockOrder, activeGateway);
+            if (result && result.success) {
+                transactionId = result.transactionId;
+                Alert.alert('Payment Successful', 'Transaction ID: ' + transactionId);
+            } else {
+                throw new Error('Payment failed or cancelled');
+            }
+        } catch (error: any) {
+            console.error('Payment Error:', error);
+            Alert.alert('Payment Failed', error.message || 'Transaction could not be completed');
+            setIsProcessing(false);
+            return;
         }
     }
 
@@ -186,7 +250,12 @@ const CheckoutScreen = () => {
                 };
             }),
             paymentMethod: paymentMethod === 'online' ? 'online' : 'cod',
-            total: totalAmount 
+            payment_status: paymentMethod === 'online' ? 'paid' : 'unpaid',
+            total: totalAmount + deliveryFee,
+            delivery_charge: deliveryFee,
+            courier_id: selectedCourier?.id || null,
+            courier_name: selectedCourier?.name || null,
+            gateway_transaction_id: transactionId
         });
         
         setIsProcessing(false);
@@ -194,8 +263,8 @@ const CheckoutScreen = () => {
         await AsyncStorage.removeItem('mb_cart');
         await updateCartCount();
         
-        Alert.alert('Success', 'Order placed successfully!', [
-           { text: 'OK', onPress: () => navigation.navigate('Orders') }
+        Alert.alert('Order Successful', 'Your order has been placed successfully!', [
+           { text: 'View Orders', onPress: () => navigation.navigate('Orders') }
         ]);
     } catch (error: any) {
         console.error(error);
@@ -222,7 +291,7 @@ const CheckoutScreen = () => {
     fetchAddresses();
     fetchCountries();
     fetchProfile();
-    fetchActiveGateway();
+    fetchData();
   }, []);
 
   const fetchAddresses = async () => {
@@ -249,6 +318,7 @@ const CheckoutScreen = () => {
       // Assuming item has: address_line1 (or address), city, state, postal_code (or zipcode)
       const formatted = `${item.address || item.address_line1}, ${item.city}, ${item.state}, ${item.zip_code || item.postal_code || item.postCode}, ${item.country}`;
       setAddress(formatted);
+      updateDeliveryCharge(item.state);
   };
   
   const handleNewAddressChange = () => {
@@ -267,6 +337,7 @@ const CheckoutScreen = () => {
       if (addNewAddress) {
           const formatted = [newAddressLine, newCity, newPostCode, newState, newCountry].filter(Boolean).join(', ');
           setAddress(formatted);
+          if (newState) updateDeliveryCharge(newState);
       }
   }, [newAddressLine, newCity, newPostCode, newState, newCountry, addNewAddress]);
 
@@ -279,6 +350,15 @@ const CheckoutScreen = () => {
             style={{flex: 1}}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
         >
+          {/* Custom Header */}
+          <View style={styles.topHeader}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: 10}}>
+                  <Ionicons name="arrow-back" size={24} color="#333" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Checkout</Text>
+              <View style={{width: 44}} /> 
+          </View>
+
           <ScrollView contentContainerStyle={styles.scrollContent}>
             
             {/* Address Section */}
@@ -415,14 +495,38 @@ const CheckoutScreen = () => {
                     <Text style={styles.summaryLabel}>Items Total</Text>
                     <Text style={styles.summaryValue}>₹{totalAmount}</Text>
                 </View>
+            
+            {/* Courier Selection */}
+            {couriers.length > 0 && (
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Ionicons name="bus-outline" size={20} color="#333" />
+                        <Text style={styles.sectionTitle}>Select Courier</Text>
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.courierList}>
+                        {couriers.map((item) => (
+                            <TouchableOpacity 
+                                key={item.id} 
+                                style={[styles.courierCard, selectedCourier?.id === item.id && styles.courierCardSelected]}
+                                onPress={() => setSelectedCourier(item)}
+                            >
+                                <View style={[styles.courierRadio, selectedCourier?.id === item.id && styles.courierRadioSelected]} />
+                                <Text style={styles.courierText}>{item.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Delivery Fee</Text>
-                    <Text style={styles.freeDelivery}>Free</Text>
+                    <Text style={deliveryFee === 0 ? styles.freeDelivery : styles.summaryValue}>
+                        {deliveryFee === 0 ? 'Free' : `₹${deliveryFee}`}
+                    </Text>
                 </View>
                 <View style={styles.divider} />
                 <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Total to Pay</Text>
-                    <Text style={styles.totalValue}>₹{totalAmount}</Text>
+                    <Text style={styles.totalValue}>₹{totalAmount + deliveryFee}</Text>
                 </View>
             </View>
 
@@ -471,7 +575,7 @@ const CheckoutScreen = () => {
                      <ActivityIndicator color="#fff" /> 
                 ) : (
                     <>
-                        <Text style={styles.payButtonText}>PAY ₹{totalAmount}</Text>
+                        <Text style={styles.payButtonText}>PAY ₹{totalAmount + deliveryFee}</Text>
                         <Ionicons name="lock-closed" size={18} color="#fff" style={{marginLeft: 8}} />
                     </>
                 )}
@@ -526,6 +630,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingHorizontal: 5,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
   },
   scrollContent: {
       padding: 15,
@@ -743,6 +862,43 @@ const styles = StyleSheet.create({
       backgroundColor: 'rgba(0,0,0,0.5)',
       justifyContent: 'center',
       alignItems: 'center',
+  },
+  courierList: {
+      marginTop: 10,
+      marginBottom: 5,
+  },
+  courierCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 15,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: '#eee',
+      marginRight: 10,
+      backgroundColor: '#f9f9f9',
+      minWidth: 120,
+  },
+  courierCardSelected: {
+      borderColor: COLORS.primary,
+      backgroundColor: COLORS.primary + '10',
+  },
+  courierText: {
+      fontSize: 14,
+      color: '#333',
+      fontWeight: '600',
+  },
+  courierRadio: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: '#bbb',
+      marginRight: 10,
+  },
+  courierRadioSelected: {
+      borderColor: COLORS.primary,
+      backgroundColor: COLORS.primary,
   },
   modalContainer: {
       width: '85%',

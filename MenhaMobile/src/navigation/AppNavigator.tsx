@@ -16,12 +16,12 @@ import HomeScreen from '../screens/HomeScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import CartScreen from '../screens/CartScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import WishlistScreen from '../screens/WishlistScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import AddressScreen from '../screens/AddressScreen';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
 import CategoryProductsScreen from '../screens/CategoryProductsScreen';
+import AddAddressScreen from '../screens/AddAddressScreen';
 
 // Types
 export type RootStackParamList = {
@@ -32,8 +32,8 @@ export type RootStackParamList = {
   Checkout: { cartItems: any[], totalAmount: number };
   Orders: undefined;
   OrderDetail: { orderId: string, orderData?: any };
-  Wishlist: undefined;
   Address: undefined;
+  AddAddress: { address?: any };
   CategoryProducts: { categoryId: string, categoryName: string };
 };
 
@@ -75,8 +75,6 @@ const MainTabs = () => {
             iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'Cart') {
             iconName = focused ? 'cart' : 'cart-outline';
-          } else if (route.name === 'Wishlist') {
-            iconName = focused ? 'heart' : 'heart-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -87,7 +85,6 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       {/* <Tab.Screen name="Category" component={CategoryScreen} /> */} 
-      <Tab.Screen name="Wishlist" component={WishlistScreen} />
       <Tab.Screen 
         name="Cart" 
         component={CartScreen} 
@@ -167,7 +164,7 @@ const AppNavigator = () => {
         <Stack.Screen 
             name="Checkout"  
             component={CheckoutScreen} 
-            options={{ title: 'Checkout' }} 
+            options={{ headerShown: false }} 
         />
         
         <Stack.Screen 
@@ -191,6 +188,11 @@ const AppNavigator = () => {
         <Stack.Screen 
             name="CategoryProducts" 
             component={CategoryProductsScreen} 
+            options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+            name="AddAddress" 
+            component={AddAddressScreen} 
             options={{ headerShown: false }} 
         />
     </Stack.Navigator>

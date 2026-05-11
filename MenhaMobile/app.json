@@ -18,10 +18,6 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.menhaboutique.mobile",
       "softwareKeyboardLayoutMode": "adjustResize"
     },
@@ -29,19 +25,18 @@
       "favicon": "./assets/logo.png"
     },
     "plugins": [
-      "expo-font"
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.menhaboutique.mobile",
+          "enableGooglePay": true
+        }
+      ]
     ],
     "extra": {
       "eas": {
         "projectId": "ab57f212-815f-409b-83bf-43f7225794f2"
       }
-    },
-    "owner": "smartseyalitech",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/ab57f212-815f-409b-83bf-43f7225794f2"
     }
   }
 }

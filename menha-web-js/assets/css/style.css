@@ -53,8 +53,8 @@ img {
 .container {
     width: 100%;
     margin: 0 auto;
-    padding: 0 1.5rem;
-    max-width: 1200px;
+    padding: 0 1rem;
+    max-width: 1400px;
 }
 
 .section-padding {
@@ -561,3 +561,47 @@ img {
     font-size: 0.9rem;
     opacity: 0.8;
 }
+
+/* Responsive Grid for Checkout & Forms */
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2.5rem;
+    align-items: flex-start;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.address-card-grid {
+    display: grid; 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 1rem 2.5rem;
+}
+
+@media (max-width: 992px) {
+    .checkout-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .form-grid {
+        grid-column-gap: 0;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .form-grid > div[style*="grid-column: span 2"] {
+        grid-column: span 1 !important;
+    }
+
+    .address-card-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+    }
+}

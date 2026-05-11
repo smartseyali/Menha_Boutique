@@ -5,9 +5,20 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useCart } from '../context/CartContext';
 
-const Header = () => {
+interface HeaderProps {
+  onSearch?: (text: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onSearch }) => {
   const navigation = useNavigation<any>();
   const { cartCount } = useCart();
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const handleSearchSubmit = () => {
+      if (onSearch) {
+          onSearch(searchQuery);
+      }
+  };
 
   return (
     <View style={styles.mainContainer}>
@@ -48,8 +59,16 @@ const Header = () => {
               style={styles.input} 
               placeholder="Search for products..." 
               placeholderTextColor="#999"
+              value={searchQuery}
+              onChangeText={(text) => {
+                  setSearchQuery(text);
+                  if (onSearch) onSearch(text); // live search
+              }}
+              onSubmitEditing={handleSearchSubmit}
             />
-            <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
+            <TouchableOpacity onPress={handleSearchSubmit}>
+                <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
+            </TouchableOpacity>
           </View>
         </View>
       </View>

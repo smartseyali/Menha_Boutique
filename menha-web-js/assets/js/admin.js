@@ -631,10 +631,25 @@ function renderOrders(list) {
     }).join('');
     lucide.createIcons();
     document.getElementById('order-select-all').checked = false;
+    
+    // Add change listeners to checkboxes to show/hide bulk actions
+    document.querySelectorAll('.order-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateBulkActionsVisibility);
+    });
+    updateBulkActionsVisibility();
 }
 
 function toggleSelectAllOrders(checked) {
     document.querySelectorAll('.order-checkbox').forEach(cb => cb.checked = checked);
+    updateBulkActionsVisibility();
+}
+
+function updateBulkActionsVisibility() {
+    const selectedCount = document.querySelectorAll('.order-checkbox:checked').length;
+    const bulkPanel = document.getElementById('bulk-order-actions');
+    if (bulkPanel) {
+        bulkPanel.style.display = selectedCount > 0 ? 'flex' : 'none';
+    }
 }
 
 function filterOrders() {
@@ -948,6 +963,40 @@ async function updateOrderStatus() {
     } catch(e) { showToast('Update failed', 'error'); }
 }
 
+async function bulkUpdateOrderStatus() {
+    const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => cb.value);
+    if (!selectedIds.length) {
+        showToast('Please select at least one order', 'error');
+        return;
+    }
+
+    const newStatus = document.getElementById('bulk-order-status').value;
+    if (!confirm(`Update status of ${selectedIds.length} orders to "${newStatus}"?`)) return;
+
+    const btn = document.querySelector('#bulk-order-actions button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+
+    try {
+        await Promise.all(selectedIds.map(id => 
+            Supabase.from('orders').eq('id', id).update({ 
+                status: newStatus, 
+                updated_at: new Date().toISOString() 
+            })
+        ));
+
+        showToast(`${selectedIds.length} orders updated successfully!`);
+        await loadOrders();
+    } catch (e) {
+        console.error('Bulk update error:', e);
+        showToast('Failed to update some orders', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
 // ── USERS ─────────────────────────────────────────────────
 async function loadUsers() {
     document.getElementById('users-tbody').innerHTML = '<tr><td colspan="7" class="loading-row">Loading...</td></tr>';
@@ -1176,25 +1225,42 @@ async function deleteBanner(id, name) {
 
 // ── DELIVERY ──────────────────────────────────────────────
 async function loadDelivery() {
-    document.getElementById('tariffs-tbody').innerHTML = '<tr><td colspan="6" class="loading-row">Loading...</td></tr>';
+    document.getElementById('tariffs-tbody').innerHTML = '<tr><td colspan="7" class="loading-row">Loading...</td></tr>';
     document.getElementById('states-tbody').innerHTML = '<tr><td colspan="4" class="loading-row">Loading...</td></tr>';
     try {
-        const [tariffs, states] = await Promise.all([
+        const [tariffsRes, statesRes, configRes] = await Promise.allSettled([
             Supabase.from('delivery_tariffs').select('*').order('max_weight').get(),
-            Supabase.from('states').select('id,name,code,zone').order('name').get()
+            Supabase.from('states').select('id,name,code,zone').order('name').get(),
+            Supabase.from('delivery_config').select('*').get()
         ]);
-        allTariffs = tariffs;
-        allStates = states;
+        
+        allTariffs = tariffsRes.status === 'fulfilled' ? tariffsRes.value : [];
+        allStates = statesRes.status === 'fulfilled' ? statesRes.value : [];
+        
+        if (configRes.status === 'fulfilled' && configRes.value && configRes.value.length) {
+            const mode = configRes.value[0].calculation_mode || 'WEIGHT';
+            const radio = document.querySelector(`input[name="delivery-mode"][value="${mode}"]`);
+            if (radio) radio.checked = true;
+        } else {
+            // Default to WEIGHT if table missing or empty
+            const radio = document.querySelector(`input[name="delivery-mode"][value="WEIGHT"]`);
+            if (radio) radio.checked = true;
+        }
+
         renderTariffs();
         renderStates();
-    } catch(e) { showToast('Failed to load delivery data', 'error'); }
+    } catch(e) { 
+        console.error('Delivery load error:', e);
+        showToast('Failed to load some delivery data', 'error'); 
+    }
 }
 function renderTariffs() {
     const tbody = document.getElementById('tariffs-tbody');
-    if (!allTariffs.length) { tbody.innerHTML = '<tr><td colspan="6" class="loading-row">No tariffs</td></tr>'; return; }
+    if (!allTariffs.length) { tbody.innerHTML = '<tr><td colspan="7" class="loading-row">No tariffs</td></tr>'; return; }
     tbody.innerHTML = allTariffs.map(t => `
         <tr>
-            <td style="font-weight:700;">${t.max_weight}g</td>
+            <td><span class="badge-${(t.tariff_type || 'WEIGHT').toLowerCase()}">${t.tariff_type || 'WEIGHT'}</span></td>
+            <td style="font-weight:700;">${t.max_weight}${t.tariff_type === 'RATE' ? '' : 'g'}</td>
             <td>₹${t.prices?.TN ?? '—'}</td>
             <td>₹${t.prices?.SOUTH ?? '—'}</td>
             <td>₹${t.prices?.REST ?? '—'}</td>
@@ -1205,6 +1271,31 @@ function renderTariffs() {
             </td>
         </tr>`).join('');
     lucide.createIcons();
+}
+
+async function updateDeliveryMode(mode) {
+    try {
+        const config = await Supabase.from('delivery_config').select('*').get();
+        if (config && config.length) {
+            await Supabase.from('delivery_config').eq('id', config[0].id).update({ calculation_mode: mode, updated_at: new Date().toISOString() });
+        } else {
+            await Supabase.from('delivery_config').insert({ calculation_mode: mode });
+        }
+        showToast(`Delivery mode changed to: ${mode}`);
+    } catch (e) {
+        console.error('Update mode error:', e);
+        // If table doesn't exist, we just show a warning but keep it in UI
+        showToast('Database table "delivery_config" missing. Changes not saved permanently.', 'error');
+    }
+}
+
+function toggleTariffLabel(type) {
+    const label = document.getElementById('tf-threshold-label');
+    if (type === 'RATE') {
+        label.textContent = 'Max Order Value (₹) *';
+    } else {
+        label.textContent = 'Max Weight (grams) *';
+    }
 }
 function renderStates() {
     const tbody = document.getElementById('states-tbody');
@@ -1226,15 +1317,21 @@ function openTariffModal(id = null) {
     document.getElementById('tariff-modal-title').textContent = id ? 'Edit Tariff' : 'Add Tariff';
     document.getElementById('tariff-form').reset();
     document.getElementById('tf-id').value = '';
+    
+    // Default label
+    toggleTariffLabel('WEIGHT');
+
     if (id) {
         const t = allTariffs.find(x => x.id === id);
         if (t) {
             document.getElementById('tf-id').value = t.id;
+            document.getElementById('tf-type').value = t.tariff_type || 'WEIGHT';
             document.getElementById('tf-weight').value = t.max_weight;
             document.getElementById('tf-tn').value = t.prices?.TN ?? 0;
             document.getElementById('tf-south').value = t.prices?.SOUTH ?? 0;
             document.getElementById('tf-rest').value = t.prices?.REST ?? 0;
             document.getElementById('tf-ne').value = t.prices?.NE ?? 0;
+            toggleTariffLabel(t.tariff_type || 'WEIGHT');
         }
     }
     openModal('tariff-modal');
@@ -1250,7 +1347,7 @@ async function saveTariff(e) {
             REST: parseInt(document.getElementById('tf-rest').value),
             NE: parseInt(document.getElementById('tf-ne').value)
         },
-        tariff_type: 'WEIGHT',
+        tariff_type: document.getElementById('tf-type').value,
         updated_at: new Date().toISOString()
     };
     try {
@@ -1263,7 +1360,22 @@ async function saveTariff(e) {
         }
         closeAllModals();
         await loadDelivery();
-    } catch(err) { showToast(err.message || 'Save failed', 'error'); }
+    } catch(err) { 
+        console.error('Save tariff error:', err);
+        // If tariff_type column missing, try saving without it
+        if (err.message && err.message.includes('tariff_type')) {
+            delete data.tariff_type;
+            try {
+                if (id) await Supabase.from('delivery_tariffs').eq('id', id).update(data);
+                else await Supabase.from('delivery_tariffs').insert(data);
+                showToast('Tariff saved (without type column)');
+                closeAllModals();
+                await loadDelivery();
+                return;
+            } catch(e2) {}
+        }
+        showToast(err.message || 'Save failed', 'error'); 
+    }
 }
 async function deleteTariff(id) {
     confirmDelete('Delete this tariff?', async () => {
@@ -1276,7 +1388,7 @@ async function deleteTariff(id) {
 }
 async function updateStateZone(id, zone) {
     try {
-        await Supabase.from('states').eq('id', id).update({ zone, updated_at: new Date().toISOString() });
+        await Supabase.from('states').eq('id', id).update({ zone });
         showToast('Zone updated!');
         const s = allStates.find(x => x.id === id);
         if (s) s.zone = zone;

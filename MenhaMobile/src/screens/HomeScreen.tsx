@@ -44,6 +44,7 @@ const HomeScreen = () => {
   const [banners, setBanners] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [bestSelling, setBestSelling] = useState<Product[]>([]);
 
   const fetchData = async () => {
@@ -65,6 +66,7 @@ const HomeScreen = () => {
       // Fetch Products
       const productsData = await MainAPI.fetchProducts();
       setProducts(productsData);
+      setFilteredProducts(productsData);
 
       // Best Selling (Mock for now or filter)
       setBestSelling(productsData.slice(0, 4));
@@ -94,6 +96,20 @@ const HomeScreen = () => {
       navigation.navigate('CategoryProducts', { categoryId: item.id, categoryName: item.name });
   };
 
+  const handleSearch = (query: string) => {
+      if (!query.trim()) {
+          setFilteredProducts(products);
+      } else {
+          const lowerQuery = query.toLowerCase();
+          setFilteredProducts(
+              products.filter(p => 
+                  p.name?.toLowerCase().includes(lowerQuery) || 
+                  p.title?.toLowerCase().includes(lowerQuery)
+              )
+          );
+      }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -105,7 +121,7 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Header />
+        <Header onSearch={handleSearch} />
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -126,8 +142,8 @@ const HomeScreen = () => {
           )}
 
           {/* All Products Section */}
-          <SectionHeader title="New Arrivals" />
-          <ProductList data={products} onPress={handleProductPress} />
+          <SectionHeader title={filteredProducts.length < products.length ? "Search Results" : "New Arrivals"} />
+          <ProductList data={filteredProducts} onPress={handleProductPress} />
           
         </ScrollView>
       </View>

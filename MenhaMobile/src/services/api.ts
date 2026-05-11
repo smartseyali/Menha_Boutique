@@ -1,8 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const SUPABASE_URL = 'https://nmvglqfqjfhiolreascc.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdmdscWZxamZoaW9scmVhc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTA5NzUsImV4cCI6MjA5MTM2Njk3NX0.zzVYmqcsXdi-3ITdWKm-QHiuUwcvBrhX2txv7dZnkb0';
+const SUPABASE_URL = 'https://wrjzdrhvrluamygexyvi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indyanpkcmh2cmx1YW15Z2V4eXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMjgwNjcsImV4cCI6MjA5MTkwNDA2N30.CQVMoSWZ1dDs0iFzpa9UjBTzRwW31ihjE-CMZcZwTBo';
 
 const api = axios.create({
   baseURL: `${SUPABASE_URL}/rest/v1`,
@@ -24,6 +24,11 @@ export const setAuthToken = (token: string | null) => {
 
 // Replicating web app's MainAPI logic for Mobile
 export const MainAPI = {
+    getProductPrice(product: any) {
+        if (product.price && !product.new_price) return parseFloat(product.price);
+        return parseFloat(product.new_price || product.newPrice || product.price || 0);
+    },
+
     async fetchBanners() {
         try {
             const res = await api.get('/banners?select=*&is_active=eq.true&order=sequence.asc');
@@ -46,7 +51,7 @@ export const MainAPI = {
 
     async fetchProducts() {
         try {
-            const res = await api.get('/products?select=*,product_attributes(*)&order=sequence.asc');
+            const res = await api.get('/products?select=*,product_attributes(*),categories(name)&order=sequence.asc');
             return res.data;
         } catch (error) {
             console.error("Error fetching products:", error);
@@ -56,7 +61,7 @@ export const MainAPI = {
 
     async fetchProductById(id: string) {
         try {
-            const res = await api.get(`/products?select=*,product_attributes(*)&id=eq.${id}`);
+            const res = await api.get(`/products?select=*,product_attributes(*),categories(name)&id=eq.${id}`);
             const product = res.data.length ? res.data[0] : null;
             if (product) {
                 const [images, reviews] = await Promise.all([
@@ -214,14 +219,17 @@ export const MainAPI = {
             
             const orderPayload = {
                 user_id: user ? user.id : null,
-                order_number: 'ORD-' + Math.floor(Math.random() * 1000000), // Should ideally come from sequence but simple for now
+                order_number: 'ORD-' + Math.floor(Math.random() * 1000000), 
                 email: orderData.email || user?.email,
                 total_price: orderData.total,
                 status: 'pending',
-                payment_status: 'unpaid',
+                payment_status: orderData.payment_status || 'unpaid',
                 payment_method: orderData.paymentMethod,
                 delivery_charge: 0,
                 address_id: orderData.shippingAddressId,
+                courier_id: orderData.courier_id || null,
+                courier_name: orderData.courier_name || null,
+                payment_link: orderData.gateway_transaction_id || null,
                 updated_at: new Date().toISOString()
             };
 
@@ -278,6 +286,81 @@ export const MainAPI = {
         } catch (error) {
             console.error("Error submitting review:", error);
             throw error;
+        }
+    },
+
+    async getAvailableCouriers() {
+        try {
+            const res = await api.get('/couriers?select=*&is_active=eq.true&order=name.asc');
+            return res.data;
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    },
+
+    async getAvailableGateways() {
+        try {
+            const res = await api.get('/payment_gateways?select=*&is_active=eq.true');
+            return res.data;
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    },
+
+    async deleteAddress(id: string) {
+        try {
+            const res = await api.delete(`/addresses?id=eq.${id}`);
+            return res;
+        } catch (error) {
+            console.error("Delete API error:", error);
+            throw error;
+        }
+    },
+
+    async calculateDeliveryCharge(stateCode: string, items: any[]) {
+        try {
+            const [stateRes, configRes] = await Promise.allSettled([
+                api.get(`/states?select=zone&code=eq.${stateCode}`),
+                api.get('/delivery_config?select=calculation_mode')
+            ]);
+
+            const zone = (stateRes.status === 'fulfilled' && stateRes.value.data.length > 0) ? stateRes.value.data[0].zone : 'REST';
+            const mode = (configRes.status === 'fulfilled' && configRes.value.data.length > 0) ? configRes.value.data[0].calculation_mode : 'WEIGHT';
+
+            let thresholdValue = 0;
+            if (mode === 'RATE') {
+                thresholdValue = items.reduce((sum, item) => {
+                    const p = item.product || item;
+                    return sum + (this.getProductPrice(p) * item.quantity);
+                }, 0);
+            } else {
+                items.forEach(item => {
+                    const p = item.product || item;
+                    const weightStr = p.weight || '0g';
+                    const weightVal = parseInt(weightStr.replace(/[^0-9]/g, '')) || 0;
+                    thresholdValue += weightVal * item.quantity;
+                });
+            }
+
+            const allTariffsRes = await api.get('/delivery_tariffs?select=*&order=max_weight.asc');
+            const allTariffs = allTariffsRes.data;
+            
+            let modeTariffs = allTariffs.filter((t: any) => (t.tariff_type || 'WEIGHT') === mode);
+            // Fallback: if mode is WEIGHT and no specific weight tariffs found, use all
+            if (mode === 'WEIGHT' && !modeTariffs.length && allTariffs.length) {
+                modeTariffs = allTariffs;
+            }
+
+            if (!modeTariffs.length) return 0;
+
+            const tier = modeTariffs.find((t: any) => t.max_weight >= thresholdValue) || modeTariffs[modeTariffs.length - 1];
+
+            return tier ? (tier.prices[zone] || tier.prices['REST'] || 0) : 0;
+        } catch (error) {
+            console.error("Delivery charge calculation error:", error);
+            return 0;
         }
     }
 };

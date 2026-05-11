@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, StatusBar, SafeAreaView, Platform } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, StatusBar, SafeAreaView, Platform, TextInput } from 'react-native';
 import api, { MainAPI } from '../services/api';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,7 +12,6 @@ const { width } = Dimensions.get('window');
 import { resolveImageUrl } from '../utils/imageUtils';
 
 import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
 
 const ProductDetailScreen = () => {
   const route = useRoute<any>();
@@ -22,16 +21,24 @@ const ProductDetailScreen = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
-  
-  const { isInWishlist, toggleWishlist: contextToggleWishlist } = useWishlist();
+  const [userToken, setUserToken] = useState<string | null>(null);
+  const [ratingInput, setRatingInput] = useState(5);
+  const [commentInput, setCommentInput] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const { updateCartCount } = useCart();
 
   useEffect(() => {
+    checkUser();
     if (productId) {
         fetchProductDetails();
     }
   }, [productId]);
+  
+  const checkUser = async () => {
+      const token = await AsyncStorage.getItem('auth_token');
+      setUserToken(token);
+  };
   
   const fetchProductDetails = async () => {
     try {
@@ -75,38 +82,41 @@ const ProductDetailScreen = () => {
     }
   };
 
-  const toggleWishlist = async () => {
-      try {
-          // Check auth handled in context method, but context method might throw error 
-          // to let UI handle the specific Alert.
-          // OR the context handles the backend call. 
-          // We can check token here first if we want same UX as ProductList.
-          const token = await AsyncStorage.getItem('auth_token');
-          if (!token) {
-              Alert.alert('Login Required', 'Please login to add to wishlist', [
-                  { text: 'Cancel', style: 'cancel'},
-                  { text: 'Login', onPress: () => navigation.navigate('Login') }
-              ]);
-              return;
-          }
 
-          if (product) {
-              await contextToggleWishlist(product);
-               // Context handles refresh and state update
-              const inWishlist = isInWishlist(product.id);
-              // Since toggle is async and context refreshes, wait a bit or trust context update?
-              // The component will re-render when context changes.
-              // We don't need to manually alert "Success" unless desired.
-              // Existing code alerted.
-              // Alert.alert('Success', !inWishlist ? 'Added to wishlist' : 'Removed from wishlist');
-          }
-      } catch (error) {
-          Alert.alert('Error', 'Could not update wishlist');
-      }
-  };
 
   const increment = () => setQuantity(prev => prev + 1);
   const decrement = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
+
+  const handleReviewSubmit = async () => {
+      if (!commentInput.trim()) {
+          Alert.alert('Error', 'Please enter a review comment');
+          return;
+      }
+      setSubmittingReview(true);
+      try {
+          await MainAPI.submitReview({
+              product_id: product.id,
+              rating: ratingInput,
+              comment: commentInput
+          });
+          Alert.alert('Success', 'Review submitted successfully!');
+          setCommentInput('');
+          setRatingInput(5);
+          fetchProductDetails(); // Refresh product to show new review
+      } catch (error) {
+          Alert.alert('Error', 'Could not submit review. Please try again.');
+      } finally {
+          setSubmittingReview(false);
+      }
+  };
+
+  if (loading) {
+      return (
+          <View style={styles.center}>
+              <ActivityIndicator size="large" color={COLORS.accent} />
+          </View>
+      );
+  }
 
   if (!product) {
     return <View style={styles.center}><Text>Product not found</Text></View>;
@@ -134,17 +144,8 @@ const ProductDetailScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header Icons Overlay */}
         <View style={styles.headerOverlay}>
-            <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-                <Ionicons name="arrow-back" size={24} color="#333" />
-            </TouchableOpacity>
+            <View /> {/* Empty view to keep right icons aligned to the right */}
             <View style={{flexDirection: 'row'}}>
-                <TouchableOpacity style={[styles.iconBtn, { marginRight: 10 }]} onPress={toggleWishlist}>
-                    <Ionicons 
-                        name={product && isInWishlist(product.id) ? "heart" : "heart-outline"} 
-                        size={24} 
-                        color={product && isInWishlist(product.id) ? COLORS.accent : "#333"} 
-                    />
-                </TouchableOpacity>
                 <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
                     <Ionicons name="cart-outline" size={24} color="#333" />
                 </TouchableOpacity>
@@ -153,9 +154,9 @@ const ProductDetailScreen = () => {
 
         <View style={styles.imageWrapper}>
              <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
-                <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
+                <Image source={{ uri: imageUrl }} style={[styles.image, { width, height: width }]} resizeMode="contain" />
                 {product.additional_images && product.additional_images.map((img: any, idx: number) => (
-                    <Image key={idx} source={{ uri: resolveImageUrl(img.image_url || img.imageUrl) }} style={styles.image} resizeMode="contain" />
+                    <Image key={idx} source={{ uri: resolveImageUrl(img.image_url || img.imageUrl) }} style={[styles.image, { width, height: width }]} resizeMode="contain" />
                 ))}
              </ScrollView>
              {discount > 0 && (
@@ -214,10 +215,47 @@ const ProductDetailScreen = () => {
            </View>
 
            {/* Reviews Section */}
-           {product.reviews && product.reviews.length > 0 && (
+           <View style={styles.divider} />
+           <Text style={styles.descriptionHead}>Customer Reviews</Text>
+           
+           {userToken && (
+               <View style={styles.reviewForm}>
+                   <Text style={styles.reviewFormTitle}>Write a Review</Text>
+                   <View style={styles.starSelector}>
+                       {[1, 2, 3, 4, 5].map((star) => (
+                           <TouchableOpacity key={star} onPress={() => setRatingInput(star)} style={{padding: 5}}>
+                               <Ionicons 
+                                   name={star <= ratingInput ? "star" : "star-outline"} 
+                                   size={28} 
+                                   color={COLORS.warning} 
+                               />
+                           </TouchableOpacity>
+                       ))}
+                   </View>
+                   <TextInput 
+                       style={styles.reviewInput}
+                       placeholder="What did you think about this product?"
+                       multiline
+                       numberOfLines={3}
+                       value={commentInput}
+                       onChangeText={setCommentInput}
+                   />
+                   <TouchableOpacity 
+                       style={[styles.submitReviewBtn, submittingReview && {opacity: 0.7}]} 
+                       onPress={handleReviewSubmit}
+                       disabled={submittingReview}
+                   >
+                       {submittingReview ? (
+                           <ActivityIndicator color="#fff" size="small" />
+                       ) : (
+                           <Text style={styles.submitReviewText}>Submit Review</Text>
+                       )}
+                   </TouchableOpacity>
+               </View>
+           )}
+
+           {product.reviews && product.reviews.length > 0 ? (
                <>
-                <View style={styles.divider} />
-                <Text style={styles.descriptionHead}>Customer Reviews</Text>
                 {product.reviews.map((rev: any, idx: number) => (
                     <View key={idx} style={styles.reviewCard}>
                         <View style={styles.reviewHeader}>
@@ -229,6 +267,8 @@ const ProductDetailScreen = () => {
                     </View>
                 ))}
                </>
+           ) : (
+               <Text style={styles.description}>No reviews yet.</Text>
            )}
         </View>
       </ScrollView>
@@ -531,6 +571,46 @@ const styles = StyleSheet.create({
   reviewDate: {
       fontSize: 11,
       color: '#999',
+  },
+  reviewForm: {
+      backgroundColor: '#f9f9f9',
+      padding: 15,
+      borderRadius: 12,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: '#eee',
+  },
+  reviewFormTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#333',
+      marginBottom: 10,
+  },
+  starSelector: {
+      flexDirection: 'row',
+      marginBottom: 15,
+      justifyContent: 'center',
+  },
+  reviewInput: {
+      backgroundColor: '#fff',
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderRadius: 8,
+      padding: 10,
+      height: 80,
+      textAlignVertical: 'top',
+      marginBottom: 15,
+  },
+  submitReviewBtn: {
+      backgroundColor: COLORS.primary,
+      padding: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+  },
+  submitReviewText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 14,
   }
 });
 

@@ -21,27 +21,11 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
 
 const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
   const navigation = useNavigation<any>();
-  const { isInWishlist, toggleWishlist } = useWishlist();
-
-  const handleWishlistPress = async (item: any) => {
-      try {
-          await toggleWishlist(item);
-      } catch (error: any) {
-          if (error.message === 'Login Required') {
-             Alert.alert(
-                'Login Required',
-                'Please login to manage your wishlist.',
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Login', onPress: () => navigation.navigate('Login') }
-                ]
-            );
-          }
-      }
-  };
+  const { updateCartCount } = useCart();
 
   const handleAddToCart = async (item: any) => {
     const token = await AsyncStorage.getItem('auth_token');
@@ -100,19 +84,22 @@ const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
   // However, I CAN add the check here for the button specifically to signal intent.
   
   const handleAddButtonPress = async (item: any) => {
-      const token = await AsyncStorage.getItem('auth_token');
-      if (!token) {
-        Alert.alert(
-            'Login Required',
-            'Please login to add items to cart.',
-             [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Login', onPress: () => navigation.navigate('Login') }
-            ]
-        );
-        return;
+      try {
+          const cartJson = await AsyncStorage.getItem('mb_cart') || '[]';
+          let cart = JSON.parse(cartJson);
+          const existing = cart.find((i: any) => i.product.id === item.id);
+          if (existing) {
+              existing.quantity += 1;
+          } else {
+              cart.push({ product: item, quantity: 1 });
+          }
+          await AsyncStorage.setItem('mb_cart', JSON.stringify(cart));
+          await updateCartCount();
+          Alert.alert('Success', 'Added to cart!');
+      } catch (error) {
+          console.error(error);
+          Alert.alert('Error', 'Failed to add to cart');
       }
-      onPress(item); // Navigate to detail for now as no direct add logic exists in list
   }
 
   const renderItem = ({ item }: { item: any }) => {
@@ -133,6 +120,19 @@ const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
     const displayPrice = item.new_price || item.newPrice || item.price;
     const displayOldPrice = item.old_price || item.oldPrice;
 
+    const attr = item.product_attributes && item.product_attributes.length > 0 ? item.product_attributes[0] : null;
+    let weightDisplay = item.weight || '';
+    if (attr) {
+        weightDisplay = String(attr.attribute_value || '');
+        if (attr.uom && String(attr.uom).trim() !== '' && String(attr.uom) !== 'undefined' && String(attr.uom) !== 'null') {
+            if (!weightDisplay.toLowerCase().includes(String(attr.uom).toLowerCase())) {
+                weightDisplay = `${weightDisplay} ${attr.uom}`;
+            }
+        }
+        // Clean up malformed data from the backend (e.g. "100mlml" or "65gg")
+        weightDisplay = weightDisplay.replace(/mlml/gi, 'ml').replace(/gg/gi, 'g');
+    }
+
     return (
       <TouchableOpacity 
         style={styles.card} 
@@ -147,20 +147,13 @@ const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
                  </View>
             )}
             
-            {/* Wishlist Icon */}
-             <TouchableOpacity style={styles.wishlistIcon} onPress={() => handleWishlistPress(item)}>
-                 <Ionicons 
-                    name={isInWishlist(item.id) ? "heart" : "heart-outline"} 
-                    size={18} 
-                    color={isInWishlist(item.id) ? COLORS.accent : "#333"} 
-                 />
-             </TouchableOpacity>
+
 
             <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
         </View>
 
         <View style={styles.details}>
-          <Text style={styles.categoryName} numberOfLines={1}>{item.category?.name || item.category_name || 'Snacks'}</Text>
+          <Text style={styles.categoryName} numberOfLines={1}>{item.categories?.name || item.category?.name || item.category_name || 'Snacks'}</Text>
           <Text style={styles.name} numberOfLines={2}>{item.name || item.title}</Text>
           
           <View style={styles.ratingRow}>
@@ -185,7 +178,7 @@ const ProductList: React.FC<ProductListProps> = ({ data, onPress }) => {
           </View>
 
           <View style={styles.weightContainer}>
-            <Text style={styles.weightText}>{item.weight || '500g'} - ₹{displayPrice}</Text>
+            <Text style={styles.weightText}>{weightDisplay}</Text>
           </View>
 
           <TouchableOpacity style={styles.addButtonContainer} onPress={() => handleAddButtonPress(item)}>

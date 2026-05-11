@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Switch, StatusBar, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Switch, StatusBar, SafeAreaView, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,7 +42,6 @@ const ProfileScreen = () => {
 
   const menuItems = [
     { title: 'My Orders', icon: 'cube-outline', screen: 'Orders' },
-    { title: 'My Wishlist', icon: 'heart-outline', screen: 'Wishlist' },
     { title: 'Shipping Addresses', icon: 'location-outline', screen: 'Address' },
     { title: 'Payment Methods', icon: 'card-outline', screen: '' },
     { title: 'My Reviews', icon: 'star-outline', screen: '' },
@@ -61,7 +60,16 @@ const ProfileScreen = () => {
         <Text style={styles.name}>{user.name}</Text>
         <Text style={styles.email}>{user.email}</Text>
         
-        <TouchableOpacity style={styles.editButton}>
+        <TouchableOpacity 
+          style={styles.editButton}
+          onPress={() => {
+              if (Platform.OS === 'web') {
+                  alert('Edit Profile feature coming soon!');
+              } else {
+                  Alert.alert('Coming Soon', 'Edit Profile feature is coming soon!');
+              }
+          }}
+        >
             <LinearGradient
                 colors={THEME.gradients.primary as any}
                 start={{ x: 0, y: 0 }}
@@ -78,7 +86,13 @@ const ProfileScreen = () => {
           <TouchableOpacity 
             key={index} 
             style={styles.menuItem} 
-            onPress={() => item.screen && navigation.navigate(item.screen)}
+            onPress={() => {
+                if (item.screen) {
+                    navigation.navigate(item.screen);
+                } else {
+                    Alert.alert('Coming Soon', `${item.title} feature is coming soon!`);
+                }
+            }}
           >
             <View style={styles.iconBox}>
                 <Ionicons name={item.icon as any} size={22} color={COLORS.primary} />

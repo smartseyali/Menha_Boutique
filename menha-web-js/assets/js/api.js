@@ -1,5 +1,5 @@
-const SUPABASE_URL = 'https://nmvglqfqjfhiolreascc.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdmdscWZxamZoaW9scmVhc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTA5NzUsImV4cCI6MjA5MTM2Njk3NX0.zzVYmqcsXdi-3ITdWKm-QHiuUwcvBrhX2txv7dZnkb0';
+const SUPABASE_URL = 'https://wrjzdrhvrluamygexyvi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indyanpkcmh2cmx1YW15Z2V4eXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMjgwNjcsImV4cCI6MjA5MTkwNDA2N30.CQVMoSWZ1dDs0iFzpa9UjBTzRwW31ihjE-CMZcZwTBo';
 
 // Tiny Supabase REST Wrapper (to match admin.js usage)
 const Supabase = {
@@ -478,23 +478,49 @@ const MainAPI = {
 
     async calculateDeliveryCharge(stateCode, items) {
         try {
-            const state = await Supabase.from('states').select('zone').eq('code', stateCode).get();
+            const [stateRes, configRes] = await Promise.allSettled([
+                Supabase.from('states').select('zone').or(`code.eq.${encodeURIComponent(stateCode)},name.eq.${encodeURIComponent(stateCode)}`).get(),
+                Supabase.from('delivery_config').select('calculation_mode').get()
+            ]);
+
+            const state = stateRes.status === 'fulfilled' ? stateRes.value : [];
             const zone = (state.length > 0) ? state[0].zone : 'REST';
             
-            // Simple calculation based on total weight
-            let totalWeight = 0;
-            items.forEach(item => {
-                const weightStr = item.product.weight || '0g';
-                const weightVal = parseInt(weightStr.replace(/[^0-9]/g, '')) || 0;
-                totalWeight += weightVal * item.quantity;
-            });
-
-            const tariffs = await Supabase.from('delivery_tariffs').select('*').order('max_weight', true).get();
-            const tier = tariffs.find(t => t.max_weight >= totalWeight) || tariffs[tariffs.length - 1];
+            let mode = 'WEIGHT';
+            if (configRes.status === 'fulfilled' && configRes.value && configRes.value.length) {
+                mode = configRes.value[0].calculation_mode;
+            }
             
-            return tier ? (tier.prices[zone] || tier.prices['REST'] || 0) : 0;
+            let thresholdValue = 0;
+            if (mode === 'RATE') {
+                thresholdValue = items.reduce((sum, item) => sum + (this.getProductPrice(item.product) * item.quantity), 0);
+            } else {
+                items.forEach(item => {
+                    const weightStr = item.product.weight || '0g';
+                    const weightVal = parseInt(weightStr.replace(/[^0-9]/g, '')) || 0;
+                    thresholdValue += weightVal * item.quantity;
+                });
+            }
+
+            const allTariffs = await Supabase.from('delivery_tariffs').select('*').order('max_weight', true).get();
+            
+            // If mode is WEIGHT, and tariffs don't have tariff_type, we use all of them as fallback
+            let modeTariffs = allTariffs.filter(t => (t.tariff_type || 'WEIGHT') === mode);
+            if (mode === 'WEIGHT' && !modeTariffs.length && allTariffs.length) {
+                modeTariffs = allTariffs;
+            }
+            
+            if (!modeTariffs.length) return 0;
+
+            const tier = modeTariffs.find(t => t.max_weight >= thresholdValue);
+            if (!tier) {
+                if (mode === 'RATE') return 0;
+                const lastTier = modeTariffs[modeTariffs.length - 1];
+                return lastTier ? (lastTier.prices[zone] || lastTier.prices['REST'] || 0) : 0;
+            }
+            return tier.prices[zone] || tier.prices['REST'] || 0;
         } catch (e) {
-            console.error(e);
+            console.error('Calculation error:', e);
             return 0;
         }
     },

@@ -69,10 +69,18 @@
     <header class="header" id="header">
         <div class="container header-container">
             <div class="header-left">
-                <a href="index.html" class="action-btn"><i data-lucide="arrow-left"></i></a>
+                <a href="javascript:void(0)" onclick="history.back();"
+                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: #f8fafc; color: #64748b; transition: 0.3s; border: 1px solid #e2e8f0;"
+                    onmouseover="this.style.background='#f1f5f9'; this.style.color='var(--color-primary)'"
+                    onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b'">
+                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+                </a>
                 <a href="index.html" class="brand" style="display: flex; align-items: center; gap: 8px;">
-                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img" style="height: 40px; width: auto;">
-                    <span class="brand-text" style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); white-space: nowrap;">Menha Boutique</span>
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img"
+                        style="height: 40px; width: auto;">
+                    <span class="brand-text"
+                        style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); white-space: nowrap;">Menha
+                        Boutique</span>
                 </a>
             </div>
             <div class="header-right">
@@ -87,8 +95,10 @@
     <div class="page-header">
         <div class="container">
             <h1 class="page-title" id="category-page-title">Shop by Category</h1>
-            <p id="category-page-subtitle" style="color: var(--color-text-light); margin-top: 0.5rem; display: none;">Showing products for selected category</p>
-            <button id="back-to-categories" onclick="showAllCategories()" style="display: none; margin: 1rem auto 0; background: var(--color-primary); color: white; border: none; padding: 8px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; align-items: center; gap: 8px;">
+            <p id="category-page-subtitle" style="color: var(--color-text-light); margin-top: 0.5rem; display: none;">
+                Showing products for selected category</p>
+            <button id="back-to-categories" onclick="showAllCategories()"
+                style="display: none; margin: 1rem auto 0; background: var(--color-primary); color: white; border: none; padding: 8px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; align-items: center; gap: 8px;">
                 <i data-lucide="arrow-left" style="width: 16px;"></i> Back to Categories
             </button>
         </div>
@@ -110,7 +120,9 @@
             <div class="footer-container">
                 <div class="footer-block footer-brand">
                     <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img">
-                    <span class="brand-text" style="font-size: 1.25rem; font-weight: 800; color: var(--color-white); display: block; margin-bottom: 0.5rem;">Menha Boutique</span>
+                    <span class="brand-text"
+                        style="font-size: 1.25rem; font-weight: 800; color: var(--color-white); display: block; margin-bottom: 0.5rem;">Menha
+                        Boutique</span>
                     <p>Experience the best in self-care with our premium range of personal care and self-care solutions.
                         We are committed to providing high-quality offerings designed to support daily wellness,
                         hygiene, and overall well-being.</p>
@@ -181,7 +193,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
-            
+
             // Check for category ID in URL
             const urlParams = new URLSearchParams(window.location.search);
             const categoryId = urlParams.get('id');

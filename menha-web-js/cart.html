@@ -16,8 +16,13 @@
 
 <body>
     <header class="checkout-header">
-        <div class="container">
-            <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary-dark); margin: 0;">Checkout</h1>
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="javascript:void(0)" onclick="history.back();" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: #f8fafc; color: #64748b; transition: 0.3s; border: 1px solid #e2e8f0;" onmouseover="this.style.background='#f1f5f9'; this.style.color='var(--color-primary)'" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b'">
+                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+                </a>
+                <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary-dark); margin: 0;">Checkout</h1>
+            </div>
             <div class="breadcrumb">
                 <a href="index.html">Home</a> &raquo; Checkout
             </div>
@@ -329,6 +334,8 @@
         let addressMode = 'existing'; // 'existing' or 'new'
         let selectedAddressId = null;
         let isCartLoading = false;
+        let lastRenderId = 0;
+        let lastDeliveryId = 0;
 
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
@@ -476,7 +483,13 @@
         async function updateCitiesUI() {
             const stateSelect = document.getElementById('cust-state');
             const selectedOpt = stateSelect.options[stateSelect.selectedIndex];
-            const stateId = selectedOpt.dataset.id;
+            
+            if (stateSelect.value) {
+                checkoutState = stateSelect.value;
+                await updateDeliveryUI();
+            }
+
+            const stateId = selectedOpt ? selectedOpt.dataset.id : null;
             const citySelect = document.getElementById('cust-city');
             citySelect.innerHTML = '<option value="">Select City</option>';
 
@@ -489,6 +502,23 @@
                     citySelect.appendChild(opt);
                 });
             }
+        }
+
+        async function updateDeliveryUI() {
+            const currentId = ++lastDeliveryId;
+            const cartItems = CartManager.getCart();
+            const charge = await MainAPI.calculateDeliveryCharge(checkoutState, cartItems);
+            
+            if (currentId !== lastDeliveryId) return;
+
+            const subtotal = CartManager.getTotalPrice();
+            const total = subtotal + charge;
+            
+            const chargeEl = document.getElementById('summary-delivery-charge');
+            const totalEl = document.getElementById('summary-total-payable');
+            
+            if (chargeEl) chargeEl.innerText = charge > 0 ? `₹${charge.toFixed(2)}` : '₹0.00';
+            if (totalEl) totalEl.innerText = `₹${total.toFixed(2)}`;
         }
 
         async function selectGateway(id) {
@@ -520,7 +550,7 @@
         }
 
         async function renderCart() {
-            if (isCartLoading) return;
+            const currentId = ++lastRenderId;
             isCartLoading = true;
 
             const workspace = document.getElementById('cart-workspace');
@@ -541,10 +571,13 @@
                 return;
             }
 
-            workspace.style.opacity = '0.5';
-
             const cartTotal = CartManager.getTotalPrice();
             const currentDeliveryCharge = await MainAPI.calculateDeliveryCharge(checkoutState, cartItems);
+            
+            if (currentId !== lastRenderId) return;
+            isCartLoading = false;
+            workspace.style.opacity = '1';
+
             const totalPayable = cartTotal + currentDeliveryCharge;
             const gatewayNameDisplay = activeGateway ? activeGateway.name.toUpperCase() : 'COD';
             const deliveryDisp = currentDeliveryCharge > 0 ? `₹${currentDeliveryCharge.toFixed(2)}` : '₹0.00';
@@ -569,7 +602,7 @@
             }
 
             // Start Layout
-            let html = '<div style="display: grid; grid-template-columns: 380px 1fr; gap: 2.5rem; align-items: start;">';
+            let html = '<div class="checkout-grid">';
 
             // LEFT COLUMN
             html += '<div style="display: flex; flex-direction: column; gap: 1.5rem;">';
@@ -584,11 +617,11 @@
                     </div>
                     <div class="summary-item">
                         <span>Delivery Charge</span>
-                        <span>${deliveryDisp}</span>
+                        <span id="summary-delivery-charge">${deliveryDisp}</span>
                     </div>
                     <div class="summary-total">
                         <span>Total Amount</span>
-                        <span>₹${totalPayable.toFixed(2)}</span>
+                        <span id="summary-total-payable">₹${totalPayable.toFixed(2)}</span>
                     </div>
 
                     <div class="payment-method-strip">
@@ -665,7 +698,7 @@
             html += `<h3 style="font-size: 1.25rem; font-weight: 700; color: #475569; margin-bottom: 1.5rem;">Billing Details</h3>`;
 
             html += `
-                <div style="display: flex; gap: 2rem; margin-bottom: 2rem;">
+                <div style="display: flex; gap: 1rem 2rem; margin-bottom: 2rem; flex-wrap: wrap;">
                      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #64748b; font-size: 0.95rem;">
                         <input type="radio" name="addr-mode" value="existing" ${addressMode === 'existing' ? 'checked' : ''} onchange="toggleAddressMode('existing')" style="accent-color: var(--color-primary); width: 1.2rem; height: 1.2rem;">
                         I want to use an existing address
@@ -697,14 +730,14 @@
                         addresses.forEach(addr => {
                             const isSelected = selectedAddressId == addr.id;
                             html += `
-                                <div onclick="selectAddress(${addr.id})" style="position: relative; cursor: pointer; border: 1px solid ${isSelected ? 'var(--color-primary)' : '#f1f5f9'}; border-radius: 12px; padding: 1.5rem; background: ${isSelected ? '#fcfdfd' : '#fff'}; transition: 0.3s; ${isSelected ? 'box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);' : ''}">
-                                    <button onclick="deleteAddressUI(${addr.id}, event)" style="position: absolute; top: 1rem; right: 1rem; background: #f1f5f9; border: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; font-size: 0.75rem;">✕</button>
+                                <div onclick="selectAddress('${addr.id}')" style="position: relative; cursor: pointer; border: 1px solid ${isSelected ? 'var(--color-primary)' : '#f1f5f9'}; border-radius: 12px; padding: 1.5rem; background: ${isSelected ? '#fcfdfd' : '#fff'}; transition: 0.3s; ${isSelected ? 'box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);' : ''}">
+                                    <button onclick="deleteAddressUI('${addr.id}', event)" style="position: absolute; top: 1rem; right: 1rem; background: #f1f5f9; border: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; font-size: 0.75rem;">✕</button>
                                     
                                     <div style="display: flex; gap: 1.5rem;">
                                         <div style="display: flex; align-items: flex-start; padding-top: 4px;">
                                             <input type="radio" name="selected-address" ${isSelected ? 'checked' : ''} readonly style="width: 1.25rem; height: 1.25rem; accent-color: var(--color-primary); cursor: pointer;">
                                         </div>
-                                        <div style="flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 2.5rem;">
+                                        <div class="address-card-grid" style="flex: 1;">
                                             <div style="display: flex; gap: 1.5rem;"><span style="color:#94a3b8; width: 80px; flex-shrink:0; font-size: 0.9rem;">Name</span> <span style="font-weight: 500; color: #334155;">${addr.first_name} ${addr.last_name || ''}</span></div>
                                             <div style="display: flex; gap: 1.5rem;"><span style="color:#94a3b8; width: 80px; flex-shrink:0; font-size: 0.9rem;">City</span> <span style="font-weight: 500; color: #334155;">${addr.city}</span></div>
                                             <div style="display: flex; gap: 1.5rem;"><span style="color:#94a3b8; width: 80px; flex-shrink:0; font-size: 0.9rem;">Address</span> <span style="font-weight: 500; color: #334155; line-height: 1.5;">${addr.address_line1 || addr.address_line}</span></div>
@@ -720,7 +753,7 @@
                     }
                 } else {
                     html += `
-                        <div id="new-address-form" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                        <div id="new-address-form" class="form-grid">
                             <div style="display: flex; flex-direction: column; gap: 0.6rem;">
                                 <label style="font-size: 0.9rem; font-weight: 600; color: #334155;">First Name *</label>
                                 <input type="text" id="cust-first-name" placeholder="Enter your First Name" required style="width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-family: inherit;">

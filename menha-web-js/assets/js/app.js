@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize Auth UI first so icons are ready for Lucide
+    initAuthUI();
+
     // Initialize standard icons
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -55,7 +58,6 @@ function initAuthUI() {
         }
     }
 }
-document.addEventListener('DOMContentLoaded', initAuthUI);
 
 async function loadBanners() {
     const bannerContainer = document.getElementById('banner-container');

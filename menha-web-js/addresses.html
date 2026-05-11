@@ -120,7 +120,7 @@
     <header class="header" id="header" style="box-shadow: none; border-bottom: 1px solid var(--color-border);">
         <div class="container header-container">
             <div class="header-left">
-                <a href="profile.html" class="action-btn"><i data-lucide="arrow-left"></i></a>
+                <a href="javascript:void(0)" onclick="history.back();" class="action-btn"><i data-lucide="arrow-left"></i></a>
                 <div class="brand">
                     <div class="brand-text">My Addresses</div>
                 </div>
@@ -193,7 +193,9 @@
                 </div>
                 <div class="form-group">
                     <label>City</label>
-                    <input type="text" id="addr-city" required>
+                    <select id="addr-city" required>
+                        <option value="">Select City</option>
+                    </select>
                 </div>
                 <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
                     <input type="checkbox" id="addr-default" style="width: auto;">
@@ -305,7 +307,7 @@
                             break;
                         }
                     }
-                    await loadStates(countrySelect.value, addr.state);
+                    await loadStates(countrySelect.value, addr.state, addr.city);
                 }
             }
 
@@ -318,21 +320,60 @@
 
         async function initLocationLogic() {
             const countrySelect = document.getElementById('addr-country');
-            const states = await MainAPI.getCountries();
+            const stateSelect = document.getElementById('addr-state');
+            
+            const countries = await MainAPI.getCountries();
             countrySelect.innerHTML = '<option value="">Select Country</option>' + 
-                states.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                countries.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 
             countrySelect.onchange = (e) => loadStates(e.target.value);
+            
+            stateSelect.onchange = (e) => {
+                const selectedOpt = stateSelect.options[stateSelect.selectedIndex];
+                const stateId = selectedOpt.dataset.id;
+                loadCities(stateId);
+            };
         }
 
-        async function loadStates(countryId, selectedStateName = '') {
+        async function loadStates(countryId, selectedStateName = '', selectedCityName = '') {
             const stateSelect = document.getElementById('addr-state');
-            if (!countryId) {
-                stateSelect.innerHTML = '<option value="">Select State</option>';
-                return;
-            }
+            const citySelect = document.getElementById('addr-city');
+            stateSelect.innerHTML = '<option value="">Select State</option>';
+            citySelect.innerHTML = '<option value="">Select City</option>';
+
+            if (!countryId) return;
+
             const states = await MainAPI.getStates(countryId);
-            stateSelect.innerHTML = states.map(s => `<option value="${s.name}" ${s.name === selectedStateName ? 'selected' : ''}>${s.name}</option>`).join('');
+            states.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                opt.textContent = s.name;
+                opt.dataset.id = s.id;
+                if (s.name === selectedStateName) opt.selected = true;
+                stateSelect.appendChild(opt);
+            });
+
+            if (selectedStateName) {
+                const state = states.find(s => s.name === selectedStateName);
+                if (state) {
+                    await loadCities(state.id, selectedCityName);
+                }
+            }
+        }
+
+        async function loadCities(stateId, selectedCityName = '') {
+            const citySelect = document.getElementById('addr-city');
+            citySelect.innerHTML = '<option value="">Select City</option>';
+            if (!stateId) return;
+
+            const cities = await MainAPI.getCities(stateId);
+            cities.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.name;
+                opt.textContent = c.name;
+                if (c.name === selectedCityName) opt.selected = true;
+                citySelect.appendChild(opt);
+            });
         }
 
         document.getElementById('address-form').onsubmit = async (e) => {

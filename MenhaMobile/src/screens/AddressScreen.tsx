@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, SafeAreaView, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { MainAPI } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api, { MainAPI } from '../services/api';
 
 const AddressScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   const [addresses, setAddresses] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -25,12 +26,47 @@ const AddressScreen = () => {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    const performDelete = async () => {
+        try {
+            setLoading(true);
+            console.log('Attempting to delete address:', id);
+            const res = await MainAPI.deleteAddress(id);
+            console.log('Delete response status:', res.status);
+            
+            Alert.alert('Success', 'Address deleted successfully');
+            fetchAddresses();
+        } catch (err: any) {
+            const errorMsg = err.response?.data?.message || err.message;
+            console.error('Delete error details:', err.response?.data || err.message);
+            Alert.alert('Error', `Could not delete address: ${errorMsg}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (Platform.OS === 'web') {
+        if (window.confirm('Are you sure you want to delete this address?')) {
+            performDelete();
+        }
+    } else {
+        Alert.alert(
+            'Delete Address',
+            'Are you sure you want to delete this address?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: performDelete }
+            ]
+        );
+    }
+  };
+
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <View style={styles.header}>
         <View style={styles.tagContainer}>
-            <Ionicons name={item.name === 'Home' ? 'home' : 'briefcase'} size={16} color="#555" />
-            <Text style={styles.tagText}>{item.name}</Text>
+            <Ionicons name={item.address_type === 'Home' ? 'home' : 'briefcase'} size={16} color="#555" />
+            <Text style={styles.tagText}>{item.address_type || 'Address'}</Text>
         </View>
         {item.isDefault && <Text style={styles.defaultText}>DEFAULT</Text>}
       </View>
@@ -38,11 +74,17 @@ const AddressScreen = () => {
       <Text style={styles.phone}>Phone: {item.phone_number}</Text>
       
       <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionBtn}>
+          <TouchableOpacity 
+            style={styles.actionBtn}
+            onPress={() => navigation.navigate('AddAddress', { address: item })}
+          >
               <Text style={styles.actionText}>Edit</Text>
           </TouchableOpacity>
           <View style={styles.divider} />
-          <TouchableOpacity style={styles.actionBtn}>
+          <TouchableOpacity 
+            style={styles.actionBtn}
+            onPress={() => handleDelete(item.id)}
+          >
               <Text style={[styles.actionText, {color: '#d32f2f'}]}>Delete</Text>
           </TouchableOpacity>
       </View>
@@ -73,7 +115,10 @@ const AddressScreen = () => {
       />
 
       <View style={styles.footer}>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => navigation.navigate('AddAddress')}
+          >
               <Text style={styles.addButtonText}>+ Add New Address</Text>
           </TouchableOpacity>
       </View>

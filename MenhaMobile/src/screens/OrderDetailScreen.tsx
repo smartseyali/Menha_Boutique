@@ -104,7 +104,8 @@ const OrderDetailScreen = () => {
         <View style={styles.section}>
             <Text style={styles.sectionTitle}>Items ({items.length})</Text>
             {items.map((item: any, index: number) => {
-                const rawImageUrl = item.product?.image || item.image || item.product?.primary_image;
+                const p = item.products || item.product || {};
+                const rawImageUrl = p.primary_image || p.image || item.image;
                 const imageUrl = resolveImageUrl(rawImageUrl);
                 
                 return (
@@ -130,7 +131,7 @@ const OrderDetailScreen = () => {
             <Text style={styles.sectionTitle}>Order Summary</Text>
             <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>₹{order.subtotal}</Text>
+                <Text style={styles.summaryValue}>₹{order.total_price}</Text>
             </View>
             <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Shipping</Text>

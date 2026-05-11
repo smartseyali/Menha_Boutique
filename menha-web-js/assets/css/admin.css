@@ -72,7 +72,7 @@
 }
 .admin-header {
   background: white;
-  padding: 1rem 1.5rem;
+  padding: 1rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -87,7 +87,7 @@
 .admin-avatar i { width: 18px; height: 18px; }
 
 /* TABS */
-.admin-tab { display: none; padding: 1.5rem; }
+.admin-tab { display: none; padding: 1.5rem 1rem; }
 .admin-tab.active { display: block; }
 .tab-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
 .tab-header h2 { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; margin: 0; }
